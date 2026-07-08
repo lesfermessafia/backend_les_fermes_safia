@@ -26,6 +26,7 @@ Route::middleware('auth:api')->group(function () {
     
     Route::middleware('admin')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
+        Route::get('/users/{id}', [AuthController::class, 'getUserById']);
         Route::put('/users/{id}/block', [AuthController::class, 'blockUser']);
         Route::get('/users/non-admin', [AuthController::class, 'getUsersNonAdmin']);
         

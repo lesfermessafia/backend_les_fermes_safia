@@ -149,4 +149,15 @@ class AuthController extends Controller
         $users = User::where('role', '!=', 'admin')->get()->makeHidden(['password']);
         return response()->json($users);
     }
+
+    public function getUserById($id)
+    {
+        $user = User::find($id);
+        
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        return response()->json($user->makeHidden(['password']));
+    }
 }
