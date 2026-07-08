@@ -74,10 +74,75 @@
 | code_stock | string(10) | Code unique du stock (généré automatiquement) |
 | formule_id | bigint | Clé étrangère vers formules (cascade delete) |
 | quantite_fabriquer | decimal(10,2) | Quantité fabriquée |
+| status | enum | Statut du stock ('en attente', 'en production', 'production terminer', 'annule', 'consommer') |
 | created_at | timestamp | Date de création |
 | updated_at | timestamp | Date de modification |
 
 **Génération du code_stock**: Format stck-XXXXXX (préfixe 'stck-' + 6 chiffres aléatoires)
+**Valeurs possibles du status**: 'en attente' (défaut), 'en production', 'production terminer', 'annule', 'consommer'
+
+### poulets
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | bigint | Clé primaire (auto-increment) |
+| code | string(7) | Code unique du poulet (généré automatiquement) |
+| nom | string | Nom du poulet |
+| race | string | Race du poulet |
+| created_at | timestamp | Date de création |
+| updated_at | timestamp | Date de modification |
+
+**Génération du code**: Format poul-XXX (préfixe 'poul-' + 3 chiffres aléatoires)
+
+### arrivage_poulets
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | bigint | Clé primaire (auto-increment) |
+| code | string(10) | Code unique de l'arrivage (généré automatiquement) |
+| poulet_id | bigint | Clé étrangère vers poulets (cascade delete) |
+| ferme_id | bigint | Clé étrangère vers fermes (cascade delete) |
+| quantite | integer | Quantité de poulets |
+| nom_fournisseur | string | Nom du fournisseur |
+| created_at | timestamp | Date de création |
+| updated_at | timestamp | Date de modification |
+
+**Génération du code**: Format Ar-p-XXXXX (préfixe 'Ar-p-' + 5 chiffres aléatoires)
+
+### mouvement_poulets
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | bigint | Clé primaire (auto-increment) |
+| code_arrivage_poulet | string(10) | Code de l'arrivage poulet (référence) |
+| type | enum | Type de mouvement ('decedee', 'malade', 'vente', 'aprovisionnement') |
+| quantite | integer | Quantité du mouvement |
+| date_mouvement | date | Date du mouvement |
+| created_at | timestamp | Date de création |
+| updated_at | timestamp | Date de modification |
+
+**Valeurs possibles du type**: 'decedee', 'malade', 'vente', 'aprovisionnement'
+
+### stock_oeufs
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | bigint | Clé primaire (auto-increment) |
+| code_ferme | string(20) | Code de la ferme |
+| quantite | integer | Quantité d'œufs |
+| date_entree | date | Date d'entrée en stock |
+| created_at | timestamp | Date de création |
+| updated_at | timestamp | Date de modification |
+
+### historique_oeufs
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | bigint | Clé primaire (auto-increment) |
+| stock_oeuf_id | bigint | Clé étrangère vers stock_oeufs (cascade delete) |
+| gerant_id | bigint | Clé étrangère vers users (cascade delete) |
+| type | enum | Type de mouvement ('entree', 'sortie', 'casse', 'vente') |
+| quantite | integer | Quantité du mouvement |
+| date_mouvement | date | Date du mouvement |
+| created_at | timestamp | Date de création |
+| updated_at | timestamp | Date de modification |
+
+**Valeurs possibles du type**: 'entree', 'sortie', 'casse', 'vente'
 
 ### historique_aliments
 | Champ | Type | Description |
@@ -1496,6 +1561,800 @@ Authorization: Bearer {admin_token}
 ```
 
 **Response (404):** Aliment not found
+
+---
+
+## Stock Aliments (Admin et tous les utilisateurs authentifiés)
+
+### GET /api/stock-aliments
+Lister tous les stocks d'aliments
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "aliment_id": 1,
+    "code_stock": "stck-123456",
+    "formule_id": 1,
+    "quantite_fabriquer": 100.00,
+    "status": "en attente",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "aliment": {
+      "id": 1,
+      "nom": "Poulet",
+      "code": "al-1234"
+    },
+    "formule": {
+      "id": 1,
+      "nom": "Formule Poulet",
+      "composant": []
+    },
+    "historiques": [
+      {
+        "id": 1,
+        "stock_aliment_id": 1,
+        "gerant_id": 2,
+        "type": "entree",
+        "quantite": 100.00,
+        "date_mouvement": "2026-07-07"
+      }
+    ]
+  }
+]
+```
+
+### GET /api/stock-aliments/{id}
+Voir les détails d'un stock d'aliment
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "aliment_id": 1,
+  "code_stock": "stck-123456",
+  "formule_id": 1,
+  "quantite_fabriquer": 100.00,
+  "status": "en attente",
+  "created_at": "2026-07-07T00:00:00.000000Z",
+  "updated_at": "2026-07-07T00:00:00.000000Z",
+  "aliment": {
+    "id": 1,
+    "nom": "Poulet",
+    "code": "al-1234"
+  },
+  "formule": {
+    "id": 1,
+    "nom": "Formule Poulet",
+    "composant": []
+  },
+  "historiques": [
+    {
+      "id": 1,
+      "stock_aliment_id": 1,
+      "gerant_id": 2,
+      "type": "entree",
+      "quantite": 100.00,
+      "date_mouvement": "2026-07-07"
+    }
+  ]
+}
+```
+
+**Response (404):** Stock aliment not found
+
+### POST /api/stock-aliments
+Créer un stock d'aliment
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "aliment_id": 1,
+  "formule_id": 1,
+  "quantite_fabriquer": 100.00,
+  "status": "en attente"
+}
+```
+
+**Note:** 
+- Le code_stock est généré automatiquement au format stck-XXXXXX.
+- Un historique_aliment avec type 'entree' est créé automatiquement.
+- Le gérant est l'utilisateur connecté.
+- Le status est optionnel, par défaut 'en attente'.
+
+**Response (201):**
+```json
+{
+  "message": "Stock aliment created successfully with entry history",
+  "stock_aliment": {
+    "id": 1,
+    "aliment_id": 1,
+    "code_stock": "stck-123456",
+    "formule_id": 1,
+    "quantite_fabriquer": 100.00,
+    "status": "en attente",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "aliment": {
+      "id": 1,
+      "nom": "Poulet",
+      "code": "al-1234"
+    },
+    "formule": {
+      "id": 1,
+      "nom": "Formule Poulet",
+      "composant": []
+    },
+    "historiques": [
+      {
+        "id": 1,
+        "stock_aliment_id": 1,
+        "gerant_id": 2,
+        "type": "entree",
+        "quantite": 100.00,
+        "date_mouvement": "2026-07-07"
+      }
+    ]
+  }
+}
+```
+
+### PUT /api/stock-aliments/{id}
+Modifier un stock d'aliment
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "aliment_id": 1,
+  "formule_id": 1,
+  "quantite_fabriquer": 150.00,
+  "status": "en production"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Stock aliment updated successfully",
+  "stock_aliment": {
+    "id": 1,
+    "aliment_id": 1,
+    "code_stock": "stck-123456",
+    "formule_id": 1,
+    "quantite_fabriquer": 150.00,
+    "status": "en production",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:30:00.000000Z",
+    "aliment": {
+      "id": 1,
+      "nom": "Poulet",
+      "code": "al-1234"
+    },
+    "formule": {
+      "id": 1,
+      "nom": "Formule Poulet",
+      "composant": []
+    },
+    "historiques": [
+      {
+        "id": 1,
+        "stock_aliment_id": 1,
+        "gerant_id": 2,
+        "type": "entree",
+        "quantite": 100.00,
+        "date_mouvement": "2026-07-07"
+      }
+    ]
+  }
+}
+```
+
+**Response (404):** Stock aliment not found
+
+### DELETE /api/stock-aliments/{id}
+Supprimer un stock d'aliment
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Stock aliment deleted successfully"
+}
+```
+
+**Response (404):** Stock aliment not found
+
+---
+
+## Poulets (Admin et tous les utilisateurs authentifiés)
+
+### GET /api/poulets
+Lister tous les poulets
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "nom": "Poulet de chair",
+    "race": "Cornish",
+    "code": "poul-123",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "arrivages": []
+  }
+]
+```
+
+### GET /api/poulets/{id}
+Voir les détails d'un poulet
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "nom": "Poulet de chair",
+  "race": "Cornish",
+  "code": "poul-123",
+  "created_at": "2026-07-07T00:00:00.000000Z",
+  "updated_at": "2026-07-07T00:00:00.000000Z",
+  "arrivages": []
+}
+```
+
+**Response (404):** Poulet not found
+
+### POST /api/poulets
+Créer un poulet
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "nom": "Poulet de chair",
+  "race": "Cornish"
+}
+```
+
+**Note:** Le code est généré automatiquement au format poul-XXX.
+
+**Response (201):**
+```json
+{
+  "message": "Poulet created successfully",
+  "poulet": {
+    "id": 1,
+    "nom": "Poulet de chair",
+    "race": "Cornish",
+    "code": "poul-123",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z"
+  }
+}
+```
+
+### PUT /api/poulets/{id}
+Modifier un poulet
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "nom": "Poulet de chair modifié",
+  "race": "Plymouth"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Poulet updated successfully",
+  "poulet": {
+    "id": 1,
+    "nom": "Poulet de chair modifié",
+    "race": "Plymouth",
+    "code": "poul-123",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:30:00.000000Z"
+  }
+}
+```
+
+**Response (404):** Poulet not found
+
+### DELETE /api/poulets/{id}
+Supprimer un poulet
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Poulet deleted successfully"
+}
+```
+
+**Response (404):** Poulet not found
+
+---
+
+## Arrivage Poulets (Admin et tous les utilisateurs authentifiés)
+
+### GET /api/arrivage-poulets
+Lister tous les arrivages de poulets
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "code": "Ar-p-12345",
+    "poulet_id": 1,
+    "ferme_id": 1,
+    "quantite": 100,
+    "nom_fournisseur": "Fournisseur A",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "poulet": {
+      "id": 1,
+      "nom": "Poulet de chair",
+      "race": "Cornish",
+      "code": "poul-123"
+    },
+    "ferme": {
+      "id": 1,
+      "nom": "Ferme Principale"
+    },
+    "mouvements": []
+  }
+]
+```
+
+### GET /api/arrivage-poulets/{id}
+Voir les détails d'un arrivage de poulet
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "code": "Ar-p-12345",
+  "poulet_id": 1,
+  "ferme_id": 1,
+  "quantite": 100,
+  "nom_fournisseur": "Fournisseur A",
+  "created_at": "2026-07-07T00:00:00.000000Z",
+  "updated_at": "2026-07-07T00:00:00.000000Z",
+  "poulet": {
+    "id": 1,
+    "nom": "Poulet de chair",
+    "race": "Cornish",
+    "code": "poul-123"
+  },
+  "ferme": {
+    "id": 1,
+    "nom": "Ferme Principale"
+  },
+  "mouvements": []
+}
+```
+
+**Response (404):** Arrivage poulet not found
+
+### POST /api/arrivage-poulets
+Créer un arrivage de poulet
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "poulet_id": 1,
+  "ferme_id": 1,
+  "quantite": 100,
+  "nom_fournisseur": "Fournisseur A"
+}
+```
+
+**Note:** Le code est généré automatiquement au format Ar-p-XXXXX.
+
+**Response (201):**
+```json
+{
+  "message": "Arrivage poulet created successfully",
+  "arrivage": {
+    "id": 1,
+    "code": "Ar-p-12345",
+    "poulet_id": 1,
+    "ferme_id": 1,
+    "quantite": 100,
+    "nom_fournisseur": "Fournisseur A",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "poulet": {
+      "id": 1,
+      "nom": "Poulet de chair",
+      "race": "Cornish",
+      "code": "poul-123"
+    },
+    "ferme": {
+      "id": 1,
+      "nom": "Ferme Principale"
+    },
+    "mouvements": []
+  }
+}
+```
+
+### PUT /api/arrivage-poulets/{id}
+Modifier un arrivage de poulet
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "poulet_id": 1,
+  "ferme_id": 1,
+  "quantite": 150,
+  "nom_fournisseur": "Fournisseur B"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Arrivage poulet updated successfully",
+  "arrivage": {
+    "id": 1,
+    "code": "Ar-p-12345",
+    "poulet_id": 1,
+    "ferme_id": 1,
+    "quantite": 150,
+    "nom_fournisseur": "Fournisseur B",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:30:00.000000Z",
+    "poulet": {
+      "id": 1,
+      "nom": "Poulet de chair",
+      "race": "Cornish",
+      "code": "poul-123"
+    },
+    "ferme": {
+      "id": 1,
+      "nom": "Ferme Principale"
+    },
+    "mouvements": []
+  }
+}
+```
+
+**Response (404):** Arrivage poulet not found
+
+### DELETE /api/arrivage-poulets/{id}
+Supprimer un arrivage de poulet
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Arrivage poulet deleted successfully"
+}
+```
+
+**Response (404):** Arrivage poulet not found
+
+---
+
+## Stock Oeufs (Admin et tous les utilisateurs authentifiés)
+
+### GET /api/stock-oeufs
+Lister tous les stocks d'œufs
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "code_ferme": "FRM-001",
+    "quantite": 1000,
+    "date_entree": "2026-07-07",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "historiques": []
+  }
+]
+```
+
+### GET /api/stock-oeufs/{id}
+Voir les détails d'un stock d'œufs avec tous ses mouvements
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "code_ferme": "FRM-001",
+  "quantite": 1000,
+  "date_entree": "2026-07-07",
+  "created_at": "2026-07-07T00:00:00.000000Z",
+  "updated_at": "2026-07-07T00:00:00.000000Z",
+  "historiques": [
+    {
+      "id": 1,
+      "stock_oeuf_id": 1,
+      "gerant_id": 1,
+      "type": "entree",
+      "quantite": 1000,
+      "date_mouvement": "2026-07-07",
+      "created_at": "2026-07-07T00:00:00.000000Z",
+      "updated_at": "2026-07-07T00:00:00.000000Z",
+      "gerant": {
+        "id": 1,
+        "nom": "Admin",
+        "prenom": "User",
+        "email": "admin@example.com"
+      }
+    }
+  ]
+}
+```
+
+**Response (404):** Stock oeuf not found
+
+### POST /api/stock-oeufs
+Créer un stock d'œufs
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "code_ferme": "FRM-001",
+  "quantite": 1000,
+  "date_entree": "2026-07-07"
+}
+```
+
+**Note:** La création d'un stock d'œufs entraîne automatiquement la création d'un historique type 'entree' avec l'utilisateur connecté comme gérant.
+
+**Response (201):**
+```json
+{
+  "message": "Stock oeuf created successfully with historique",
+  "stock_oeuf": {
+    "id": 1,
+    "code_ferme": "FRM-001",
+    "quantite": 1000,
+    "date_entree": "2026-07-07",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "historiques": [
+      {
+        "id": 1,
+        "stock_oeuf_id": 1,
+        "gerant_id": 1,
+        "type": "entree",
+        "quantite": 1000,
+        "date_mouvement": "2026-07-07",
+        "created_at": "2026-07-07T00:00:00.000000Z",
+        "updated_at": "2026-07-07T00:00:00.000000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Historique Oeufs (Admin et tous les utilisateurs authentifiés)
+
+### GET /api/historique-oeufs
+Lister tous les historiques d'œufs
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "stock_oeuf_id": 1,
+    "gerant_id": 1,
+    "type": "entree",
+    "quantite": 1000,
+    "date_mouvement": "2026-07-07",
+    "created_at": "2026-07-07T00:00:00.000000Z",
+    "updated_at": "2026-07-07T00:00:00.000000Z",
+    "stockOeuf": {
+      "id": 1,
+      "code_ferme": "FRM-001",
+      "quantite": 1000,
+      "date_entree": "2026-07-07"
+    },
+    "gerant": {
+      "id": 1,
+      "nom": "Admin",
+      "prenom": "User",
+      "email": "admin@example.com"
+    }
+  }
+]
+```
+
+### GET /api/historique-oeufs/{id}
+Voir les détails d'un historique d'œufs
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "stock_oeuf_id": 1,
+  "gerant_id": 1,
+  "type": "entree",
+  "quantite": 1000,
+  "date_mouvement": "2026-07-07",
+  "created_at": "2026-07-07T00:00:00.000000Z",
+  "updated_at": "2026-07-07T00:00:00.000000Z",
+  "stockOeuf": {
+    "id": 1,
+    "code_ferme": "FRM-001",
+    "quantite": 1000,
+    "date_entree": "2026-07-07"
+  },
+  "gerant": {
+    "id": 1,
+    "nom": "Admin",
+    "prenom": "User",
+    "email": "admin@example.com"
+  }
+}
+```
+
+**Response (404):** Historique oeuf not found
+
+### POST /api/historique-oeufs
+Créer un mouvement d'œufs
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Body:**
+```json
+{
+  "stock_oeuf_id": 1,
+  "type": "sortie",
+  "quantite": 100,
+  "date_mouvement": "2026-07-07"
+}
+```
+
+**Note:** Le gérant est automatiquement l'utilisateur connecté. Pour les types 'sortie', 'casse' et 'vente', une validation du stock est effectuée pour empêcher les sorties supérieures au stock disponible.
+
+**Response (201):**
+```json
+{
+  "message": "Historique oeuf created successfully",
+  "historique": {
+    "id": 2,
+    "stock_oeuf_id": 1,
+    "gerant_id": 1,
+    "type": "sortie",
+    "quantite": 100,
+    "date_mouvement": "2026-07-07",
+    "created_at": "2026-07-07T00:30:00.000000Z",
+    "updated_at": "2026-07-07T00:30:00.000000Z",
+    "stockOeuf": {
+      "id": 1,
+      "code_ferme": "FRM-001",
+      "quantite": 1000,
+      "date_entree": "2026-07-07"
+    },
+    "gerant": {
+      "id": 1,
+      "nom": "Admin",
+      "prenom": "User",
+      "email": "admin@example.com"
+    }
+  }
+}
+```
+
+**Response (400):** (si quantité insuffisante)
+```json
+{
+  "error": "Quantité insuffisante en stock",
+  "stock_actuel": 900,
+  "quantite_demandee": 1000
+}
+```
 
 ---
 

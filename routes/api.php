@@ -11,6 +11,11 @@ use App\Http\Controllers\LotController;
 use App\Http\Controllers\MouvementStockController;
 use App\Http\Controllers\FormuleController;
 use App\Http\Controllers\AlimentController;
+use App\Http\Controllers\StockAlimentController;
+use App\Http\Controllers\PouletController;
+use App\Http\Controllers\ArrivagePouletController;
+use App\Http\Controllers\StockOeufController;
+use App\Http\Controllers\HistoriqueOeufController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -60,6 +65,27 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/aliments', [AlimentController::class, 'store']);
         Route::put('/aliments/{id}', [AlimentController::class, 'update']);
         Route::delete('/aliments/{id}', [AlimentController::class, 'destroy']);
+        
+        // Stock Aliment routes - create and update only for admin
+        Route::post('/stock-aliments', [StockAlimentController::class, 'store']);
+        Route::put('/stock-aliments/{id}', [StockAlimentController::class, 'update']);
+        Route::delete('/stock-aliments/{id}', [StockAlimentController::class, 'destroy']);
+        
+        // Poulet routes - create and update only for admin
+        Route::post('/poulets', [PouletController::class, 'store']);
+        Route::put('/poulets/{id}', [PouletController::class, 'update']);
+        Route::delete('/poulets/{id}', [PouletController::class, 'destroy']);
+        
+        // Arrivage Poulet routes - create and update only for admin
+        Route::post('/arrivage-poulets', [ArrivagePouletController::class, 'store']);
+        Route::put('/arrivage-poulets/{id}', [ArrivagePouletController::class, 'update']);
+        Route::delete('/arrivage-poulets/{id}', [ArrivagePouletController::class, 'destroy']);
+        
+        // Stock Oeuf routes - create only for admin
+        Route::post('/stock-oeufs', [StockOeufController::class, 'store']);
+        
+        // Historique Oeuf routes - create only for admin
+        Route::post('/historique-oeufs', [HistoriqueOeufController::class, 'store']);
     });
     
     // Mouvement Stock routes - accessible to admin and comptable
@@ -105,4 +131,24 @@ Route::middleware('auth:api')->group(function () {
     // Aliment routes - accessible to all authenticated users
     Route::get('/aliments', [AlimentController::class, 'index']);
     Route::get('/aliments/{id}', [AlimentController::class, 'show']);
+    
+    // Stock Aliment routes - accessible to all authenticated users
+    Route::get('/stock-aliments', [StockAlimentController::class, 'index']);
+    Route::get('/stock-aliments/{id}', [StockAlimentController::class, 'show']);
+    
+    // Poulet routes - accessible to all authenticated users
+    Route::get('/poulets', [PouletController::class, 'index']);
+    Route::get('/poulets/{id}', [PouletController::class, 'show']);
+    
+    // Arrivage Poulet routes - accessible to all authenticated users
+    Route::get('/arrivage-poulets', [ArrivagePouletController::class, 'index']);
+    Route::get('/arrivage-poulets/{id}', [ArrivagePouletController::class, 'show']);
+    
+    // Stock Oeuf routes - accessible to all authenticated users
+    Route::get('/stock-oeufs', [StockOeufController::class, 'index']);
+    Route::get('/stock-oeufs/{id}', [StockOeufController::class, 'show']);
+    
+    // Historique Oeuf routes - accessible to all authenticated users
+    Route::get('/historique-oeufs', [HistoriqueOeufController::class, 'index']);
+    Route::get('/historique-oeufs/{id}', [HistoriqueOeufController::class, 'show']);
 });

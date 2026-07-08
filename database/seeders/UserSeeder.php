@@ -14,54 +14,64 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'nom' => 'Admin',
-            'prenom' => 'Principal',
-            'numero' => '771234567',
-            'role' => 'admin',
-            'email' => 'admin@fermesafia.com',
-            'password' => Hash::make('password123'),
-            'bloquer' => false,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'nom' => 'Admin',
+                'prenom' => 'Principal',
+                'numero' => '771234567',
+                'role' => 'admin',
+                'password' => Hash::make('admin'),
+                'bloquer' => false,
+            ]
+        );
 
-        User::create([
-            'nom' => 'Comptable',
-            'prenom' => 'Test',
-            'numero' => '772345678',
-            'role' => 'comptable',
-            'email' => 'comptable@fermesafia.com',
-            'password' => Hash::make('password123'),
-            'bloquer' => false,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'comptable@example.com'],
+            [
+                'nom' => 'Comptable',
+                'prenom' => 'Test',
+                'numero' => '772345678',
+                'role' => 'comptable',
+                'password' => Hash::make('comptable'),
+                'bloquer' => false,
+            ]
+        );
 
-        User::create([
-            'nom' => 'Superviseur',
-            'prenom' => 'Test',
-            'numero' => '773456789',
-            'role' => 'superviseur',
-            'email' => 'superviseur@fermesafia.com',
-            'password' => Hash::make('password123'),
-            'bloquer' => false,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'superviseur@example.com'],
+            [
+                'nom' => 'Superviseur',
+                'prenom' => 'Test',
+                'numero' => '773456789',
+                'role' => 'superviseur',
+                'password' => Hash::make('superviseur'),
+                'bloquer' => false,
+            ]
+        );
 
-        User::create([
-            'nom' => 'Gérant',
-            'prenom' => 'Site1',
-            'numero' => '774567890',
-            'role' => 'comptable',
-            'email' => 'gerant1@fermesafia.com',
-            'password' => Hash::make('password123'),
-            'bloquer' => false,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'gerant1@fermesafia.com'],
+            [
+                'nom' => 'Gérant',
+                'prenom' => 'Site1',
+                'numero' => '774567890',
+                'role' => 'comptable',
+                'password' => Hash::make('password123'),
+                'bloquer' => false,
+            ]
+        );
 
-        User::create([
-            'nom' => 'Gérant',
-            'prenom' => 'Ferme1',
-            'numero' => '775678901',
-            'role' => 'comptable',
-            'email' => 'gerant2@fermesafia.com',
-            'password' => Hash::make('password123'),
-            'bloquer' => false,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'gerant2@fermesafia.com'],
+            [
+                'nom' => 'Gérant',
+                'prenom' => 'Ferme1',
+                'numero' => '775678901',
+                'role' => 'comptable',
+                'password' => Hash::make('password123'),
+                'bloquer' => false,
+            ]
+        );
     }
 }

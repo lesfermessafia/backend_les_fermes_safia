@@ -52,6 +52,42 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
+    public function webLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            $user = Auth::user();
+
+            if ($user->bloquer) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Votre compte a été bloqué. Contactez l\'administrateur.',
+                ]);
+            }
+
+            // Redirection selon le rôle
+            switch ($user->role) {
+                case 'admin':
+                    return redirect()->route('admin.dashboard');
+                case 'comptable':
+                    return redirect()->route('comptable.dashboard');
+                case 'superviseur':
+                    return redirect()->route('superviseur.dashboard');
+                default:
+                    return redirect()->route('home');
+            }
+        }
+
+        return back()->withErrors([
+            'email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.',
+        ]);
+    }
+
     public function me()
     {
         return response()->json(auth('api')->user());
@@ -62,6 +98,14 @@ class AuthController extends Controller
         auth('api')->logout();
 
         return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    public function webLogout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
     }
 
     public function refresh()
