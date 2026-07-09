@@ -10,6 +10,7 @@ class Poulet extends Model
         'code',
         'nom',
         'race',
+        'photo',
     ];
 
     public function arrivages()

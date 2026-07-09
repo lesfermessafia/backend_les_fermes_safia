@@ -30,6 +30,7 @@ class FormuleController extends Controller
             return [
                 'id' => $formule->id,
                 'nom' => $formule->nom,
+                'photo' => $formule->photo,
                 'composant' => $composantsAvecInfos,
                 'created_at' => $formule->created_at,
                 'updated_at' => $formule->updated_at,
@@ -64,6 +65,7 @@ class FormuleController extends Controller
         $formuleAvecInfos = [
             'id' => $formule->id,
             'nom' => $formule->nom,
+            'photo' => $formule->photo,
             'composant' => $composantsAvecInfos,
             'created_at' => $formule->created_at,
             'updated_at' => $formule->updated_at,
@@ -77,10 +79,20 @@ class FormuleController extends Controller
         $request->validate([
             'nom' => 'required|string',
             'composant' => 'required|array',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photo->move(public_path('imageFormule'), $photoName);
+            $photoPath = 'imageFormule/' . $photoName;
+        }
 
         $formule = Formule::create([
             'nom' => $request->nom,
+            'photo' => $photoPath,
             'composant' => $request->composant,
         ]);
 
@@ -101,6 +113,7 @@ class FormuleController extends Controller
         $request->validate([
             'nom' => 'nullable|string',
             'composant' => 'nullable|array',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $updateData = [];
@@ -109,6 +122,17 @@ class FormuleController extends Controller
         }
         if ($request->has('composant')) {
             $updateData['composant'] = $request->composant;
+        }
+
+        if ($request->hasFile('photo')) {
+            if ($formule->photo && file_exists(public_path($formule->photo))) {
+                unlink(public_path($formule->photo));
+            }
+
+            $photo = $request->file('photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photo->move(public_path('imageFormule'), $photoName);
+            $updateData['photo'] = 'imageFormule/' . $photoName;
         }
 
         $formule->update($updateData);

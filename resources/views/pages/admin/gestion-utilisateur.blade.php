@@ -59,10 +59,42 @@
                 </button>
             </div>
 
+            <!-- Filtres -->
+            <form method="GET" action="{{ route('admin.users.index') }}" class="mb-6">
+                <div class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                        <input type="text" id="search" name="search" value="{{ request('search') }}" placeholder="Nom, prénom, email, téléphone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                    </div>
+                    <div class="w-full md:w-48">
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                        <select id="role" name="role" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <option value="all">Tous les rôles</option>
+                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="comptable" {{ request('role') == 'comptable' ? 'selected' : '' }}>Comptable</option>
+                            <option value="superviseur" {{ request('role') == 'superviseur' ? 'selected' : '' }}>Superviseur</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-48">
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                        <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <option value="all">Tous les statuts</option>
+                            <option value="actif" {{ request('status') == 'actif' ? 'selected' : '' }}>Actif</option>
+                            <option value="bloque" {{ request('status') == 'bloque' ? 'selected' : '' }}>Bloqué</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
+                        <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
+                    </div>
+                </div>
+            </form>
+
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Photo</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Nom</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Prénom</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Email</th>
@@ -73,8 +105,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($users as $user)
+                        @forelse ($users as $user)
                         <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm">
+                                @if($user->photo_profil)
+                                    <img src="{{ asset($user->photo_profil) }}" alt="{{ $user->nom }}" class="w-10 h-10 object-cover rounded-full">
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">👤</div>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $user->nom }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $user->prenom }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $user->email }}</td>
@@ -111,7 +150,13 @@
                                 </div>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                Aucun utilisateur ne correspond aux critères sélectionnés.
+                            </td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -122,10 +167,17 @@
     <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 id="modalTitle" class="text-xl font-bold mb-4">Nouvel Utilisateur</h3>
-            <form id="userForm" method="POST" action="{{ route('admin.users.store') }}">
+            <form id="userForm" method="POST" action="{{ route('admin.users.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" id="userId" name="id" value="">
-                
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Photo de profil</label>
+                    <img id="photoPreview" src="" alt="Photo actuelle" class="w-16 h-16 object-cover rounded-full mb-2 hidden">
+                    <input type="file" id="photo_profil" name="photo_profil" accept="image/jpeg,image/png,image/jpg,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                    <p class="text-xs text-gray-500 mt-1">Formats acceptés: JPEG, PNG, JPG, GIF (max 2MB). Laissez vide pour conserver la photo actuelle.</p>
+                </div>
+
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                     <input type="text" id="nom" name="nom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
@@ -202,6 +254,14 @@
             document.getElementById('userId').value = '';
             document.getElementById('userForm').reset();
             document.getElementById('passwordField').style.display = 'block';
+
+            const methodInput = document.getElementById('_method');
+            if (methodInput) {
+                methodInput.value = '';
+            }
+
+            document.getElementById('photoPreview').classList.add('hidden');
+            document.getElementById('photoPreview').src = '';
         }
 
         function closeModal() {
@@ -244,6 +304,16 @@
                 document.getElementById('numero').value = user.numero;
                 document.getElementById('role').value = user.role;
                 document.getElementById('passwordField').style.display = 'none';
+                document.getElementById('photo_profil').value = '';
+
+                const preview = document.getElementById('photoPreview');
+                if (user.photo_profil) {
+                    preview.src = '/' + user.photo_profil;
+                    preview.classList.remove('hidden');
+                } else {
+                    preview.src = '';
+                    preview.classList.add('hidden');
+                }
             } catch (error) {
                 showAjaxError('Erreur lors du chargement de l\'utilisateur: ' + error.message);
             }

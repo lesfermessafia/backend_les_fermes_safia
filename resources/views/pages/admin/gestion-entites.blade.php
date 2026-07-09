@@ -107,6 +107,21 @@
                     </button>
                 </div>
 
+                <!-- Filtres Sites -->
+                <form method="GET" action="{{ route('admin.entites.index') }}" class="mb-4">
+                    <input type="hidden" name="tab" value="sites">
+                    <div class="flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1">
+                            <label for="searchSites" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                            <input type="text" id="searchSites" name="search" value="{{ request('search') }}" placeholder="Nom, adresse, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
+                            <a href="{{ route('admin.entites.index', ['tab' => 'sites']) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
+                        </div>
+                    </div>
+                </form>
+
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
@@ -122,7 +137,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($sites as $site)
+                            @forelse ($sites as $site)
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ $site->nom }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $site->adresse ?? '-' }}</td>
@@ -136,7 +151,13 @@
                                     <button onclick="deleteSite({{ $site->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                    Aucun site ne correspond aux critères sélectionnés.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -151,6 +172,30 @@
                     </button>
                 </div>
 
+                <!-- Filtres Fermes -->
+                <form method="GET" action="{{ route('admin.entites.index') }}" class="mb-4">
+                    <input type="hidden" name="tab" value="fermes">
+                    <div class="flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1">
+                            <label for="searchFermes" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                            <input type="text" id="searchFermes" name="search" value="{{ request('search') }}" placeholder="Nom, site, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        </div>
+                        <div class="w-full md:w-56">
+                            <label for="siteFermes" class="block text-sm font-medium text-gray-700 mb-1">Site</label>
+                            <select id="siteFermes" name="site" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                                <option value="">Tous les sites</option>
+                                @foreach ($allSites as $site)
+                                    <option value="{{ $site->id }}" {{ request('site') == $site->id ? 'selected' : '' }}>{{ $site->nom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
+                            <a href="{{ route('admin.entites.index', ['tab' => 'fermes']) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
+                        </div>
+                    </div>
+                </form>
+
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
@@ -166,7 +211,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($fermes as $ferme)
+                            @forelse ($fermes as $ferme)
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ $ferme->nom }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $ferme->site ? $ferme->site->nom : '-' }}</td>
@@ -180,7 +225,13 @@
                                     <button onclick="deleteFerme({{ $ferme->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                    Aucune ferme ne correspond aux critères sélectionnés.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -195,6 +246,30 @@
                     </button>
                 </div>
 
+                <!-- Filtres Magasins -->
+                <form method="GET" action="{{ route('admin.entites.index') }}" class="mb-4">
+                    <input type="hidden" name="tab" value="magasins">
+                    <div class="flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1">
+                            <label for="searchMagasins" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                            <input type="text" id="searchMagasins" name="search" value="{{ request('search') }}" placeholder="Nom, site, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        </div>
+                        <div class="w-full md:w-56">
+                            <label for="siteMagasins" class="block text-sm font-medium text-gray-700 mb-1">Site</label>
+                            <select id="siteMagasins" name="site" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                                <option value="">Tous les sites</option>
+                                @foreach ($allSites as $site)
+                                    <option value="{{ $site->id }}" {{ request('site') == $site->id ? 'selected' : '' }}>{{ $site->nom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
+                            <a href="{{ route('admin.entites.index', ['tab' => 'magasins']) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
+                        </div>
+                    </div>
+                </form>
+
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
@@ -210,7 +285,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($magasins as $magasin)
+                            @forelse ($magasins as $magasin)
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ $magasin->nom }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $magasin->site ? $magasin->site->nom : '-' }}</td>
@@ -224,7 +299,13 @@
                                     <button onclick="deleteMagasin({{ $magasin->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                    Aucun magasin ne correspond aux critères sélectionnés.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -325,7 +406,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Site</label>
                     <select id="fermeSite" name="idsite" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                         <option value="">Sélectionner un site</option>
-                        @foreach ($sites as $site)
+                        @foreach ($allSites as $site)
                         <option value="{{ $site->id }}">{{ $site->nom }}</option>
                         @endforeach
                     </select>
@@ -406,7 +487,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Site</label>
                     <select id="magasinSite" name="idsite" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                         <option value="">Sélectionner un site</option>
-                        @foreach ($sites as $site)
+                        @foreach ($allSites as $site)
                         <option value="{{ $site->id }}">{{ $site->nom }}</option>
                         @endforeach
                     </select>
@@ -491,25 +572,146 @@
             }, 3000);
         }
 
-        function switchTab(tab) {
+        function switchTab(tab, pushState = true) {
             // Cacher tous les contenus
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
             });
-            
+
             // Réinitialiser tous les onglets
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('border-[#008d36]', 'text-[#008d36]');
                 btn.classList.add('border-transparent', 'text-gray-500');
             });
-            
+
             // Afficher le contenu sélectionné
             document.getElementById('content-' + tab).classList.remove('hidden');
-            
+
             // Activer l'onglet sélectionné
             document.getElementById('tab-' + tab).classList.remove('border-transparent', 'text-gray-500');
             document.getElementById('tab-' + tab).classList.add('border-[#008d36]', 'text-[#008d36]');
+
+            // Mettre à jour l'URL sans recharger
+            if (pushState) {
+                const params = new URLSearchParams(window.location.search);
+                params.set('tab', tab);
+                history.pushState({}, '', window.location.pathname + '?' + params.toString());
+            }
         }
+
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function renderEntityRows(items, type) {
+            if (items.length === 0) {
+                const labels = { sites: 'site', fermes: 'ferme', magasins: 'magasin' };
+                return `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Aucun ${labels[type]} ne correspond aux critères sélectionnés.</td></tr>`;
+            }
+
+            const typeSingular = type.slice(0, -1);
+            return items.map(item => {
+                const siteOrAdresse = type === 'sites'
+                    ? escapeHtml(item.adresse ?? '-')
+                    : escapeHtml(item.site ?? '-');
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(item.nom)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${siteOrAdresse}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.latitude ?? '-')}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.longitude ?? '-')}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.longueur ?? '-')}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.largeur ?? '-')}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.gerant ?? '-')}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <button onclick="edit${capitalize(typeSingular)}(${item.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
+                            <button onclick="delete${capitalize(typeSingular)}(${item.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateTables(data) {
+            document.querySelector('#content-sites tbody').innerHTML = renderEntityRows(data.sites, 'sites');
+            document.querySelector('#content-fermes tbody').innerHTML = renderEntityRows(data.fermes, 'fermes');
+            document.querySelector('#content-magasins tbody').innerHTML = renderEntityRows(data.magasins, 'magasins');
+        }
+
+        async function loadEntities(url) {
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+                const data = await response.json();
+                updateTables(data);
+                syncFilterInputsFromUrl();
+            } catch (error) {
+                showAjaxError('Erreur lors du chargement des entités: ' + error.message);
+            }
+        }
+
+        function syncFilterInputsFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            document.querySelectorAll('.tab-content form [name="search"]').forEach(input => {
+                input.value = params.get('search') || '';
+            });
+            document.querySelectorAll('.tab-content form [name="site"]').forEach(select => {
+                select.value = params.get('site') || '';
+            });
+        }
+
+        // Restaurer l'onglet actif et activer les filtres AJAX au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab && ['sites', 'fermes', 'magasins'].includes(tab)) {
+                switchTab(tab, false);
+            }
+            syncFilterInputsFromUrl();
+
+            document.querySelectorAll('.tab-content form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new URLSearchParams(new FormData(form));
+                    const url = `${form.action}?${formData.toString()}`;
+                    loadEntities(url);
+                    history.pushState({}, '', url);
+                });
+
+                const resetLink = form.querySelector('a[href]');
+                if (resetLink) {
+                    resetLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        form.reset();
+                        const formData = new URLSearchParams(new FormData(form));
+                        const url = `${form.action}?${formData.toString()}`;
+                        loadEntities(url);
+                        history.pushState({}, '', url);
+                    });
+                }
+            });
+        });
+
+        window.addEventListener('popstate', function() {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab && ['sites', 'fermes', 'magasins'].includes(tab)) {
+                switchTab(tab, false);
+            }
+            syncFilterInputsFromUrl();
+            loadEntities(window.location.href);
+        });
 
         // Site Modal
         function openSiteModal() {

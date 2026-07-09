@@ -51,6 +51,20 @@
                 </button>
             </div>
 
+            <!-- Filtre -->
+            <form method="GET" action="{{ route('admin.matieres-premieres.index') }}" class="mb-4 filter-form">
+                <div class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1">
+                        <label for="searchMatieres" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                        <input type="text" id="searchMatieres" name="search" value="{{ request('search') }}" placeholder="Code, nom ou unité..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
+                        <a href="{{ route('admin.matieres-premieres.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center reset-link">Réinitialiser</a>
+                    </div>
+                </div>
+            </form>
+
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -63,7 +77,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($matieres as $matiere)
+                        @forelse ($matieres as $matiere)
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $matiere->code }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $matiere->nom }}</td>
@@ -80,7 +94,13 @@
                                 <button onclick="deleteMatiere({{ $matiere->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                Aucune matière première ne correspond aux critères sélectionnés.
+                            </td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -126,7 +146,7 @@
     </div>
 
     <script>
-        const matieres = @json($matieres);
+        let matieres = @json($matieres);
 
         function openModal() {
             document.getElementById('matiereModal').classList.remove('hidden');
@@ -193,6 +213,78 @@
                 form.submit();
             }
         }
+
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function renderMatieres(items) {
+            const tbody = document.querySelector('.overflow-x-auto tbody');
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Aucune matière première ne correspond aux critères sélectionnés.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = items.map(m => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(m.code)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(m.nom)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${m.image ? `<img src="/${escapeHtml(m.image)}" alt="${escapeHtml(m.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(m.unite)}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <button onclick="editMatiere(${m.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
+                        <button onclick="deleteMatiere(${m.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadMatieres(url) {
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+                const data = await response.json();
+                matieres = data.matieres;
+                renderMatieres(matieres);
+            } catch (error) {
+                alert('Erreur lors du chargement des matières premières: ' + error.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.filter-form');
+            const resetLink = document.querySelector('.reset-link');
+
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new URLSearchParams(new FormData(form));
+                    const url = `${form.action}?${formData.toString()}`;
+                    loadMatieres(url);
+                    history.pushState({}, '', url);
+                });
+            }
+
+            if (resetLink) {
+                resetLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    form.reset();
+                    const url = form.action;
+                    loadMatieres(url);
+                    history.pushState({}, '', url);
+                });
+            }
+        });
+
+        window.addEventListener('popstate', function() {
+            loadMatieres(window.location.href);
+        });
     </script>
 </body>
 </html>

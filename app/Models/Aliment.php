@@ -9,6 +9,7 @@ class Aliment extends Model
     protected $fillable = [
         'nom',
         'code',
+        'photo',
     ];
 
     public static function generateCode()

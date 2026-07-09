@@ -7,9 +7,24 @@ use App\Models\MatierePremiere;
 
 class MatierePremiereWebController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $matieres = MatierePremiere::all();
+        $query = MatierePremiere::query();
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('unite', 'like', "%{$search}%");
+            });
+        }
+
+        $matieres = $query->orderBy('id', 'desc')->get();
+
+        if ($request->ajax()) {
+            return response()->json(['matieres' => $matieres]);
+        }
+
         return view('pages.admin.gestion-matieres-premieres', compact('matieres'));
     }
 
@@ -70,7 +85,7 @@ class MatierePremiereWebController extends Controller
 
         $matiere->update($updateData);
 
-        return redirect()->route('admin.matieres-premieres.index')->with('success', 'Matière première mise à jour avec succès');
+        return redirect()->back()->with('success', 'Matière première mise à jour avec succès');
     }
 
     public function destroy($id)

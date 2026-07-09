@@ -6,6 +6,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EntiteController;
 use App\Http\Controllers\MatierePremiereWebController;
 use App\Http\Controllers\AlimentWebController;
+use App\Http\Controllers\PouletWebController;
+use App\Http\Controllers\FormuleWebController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -79,6 +81,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [AlimentWebController::class, 'store'])->name('store');
         Route::put('/{id}', [AlimentWebController::class, 'update'])->name('update');
         Route::delete('/{id}', [AlimentWebController::class, 'destroy'])->name('destroy');
+    });
+
+    // Routes de gestion des poulets (Admin uniquement)
+    Route::middleware('role:admin')->prefix('admin/poulets')->name('admin.poulets.')->group(function () {
+        Route::get('/', [PouletWebController::class, 'index'])->name('index');
+        Route::post('/', [PouletWebController::class, 'store'])->name('store');
+        Route::put('/{id}', [PouletWebController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PouletWebController::class, 'destroy'])->name('destroy');
+    });
+
+    // Routes de gestion des formules (Admin uniquement)
+    Route::middleware('role:admin')->prefix('admin/formules')->name('admin.formules.')->group(function () {
+        Route::get('/', [FormuleWebController::class, 'index'])->name('index');
+        Route::post('/', [FormuleWebController::class, 'store'])->name('store');
+        Route::put('/{id}', [FormuleWebController::class, 'update'])->name('update');
+        Route::delete('/{id}', [FormuleWebController::class, 'destroy'])->name('destroy');
     });
 
     // Dashboard Comptable

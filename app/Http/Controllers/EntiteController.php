@@ -9,13 +9,106 @@ use App\Models\Magasin;
 
 class EntiteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sites = Site::with('gerantUser')->get();
-        $fermes = Ferme::with('site', 'gerantUser')->get();
-        $magasins = Magasin::with('site', 'gerantUser')->get();
-        
-        return view('pages.admin.gestion-entites', compact('sites', 'fermes', 'magasins'));
+        $allSites = Site::orderBy('nom')->get();
+        $search = $request->input('search');
+        $siteId = $request->input('site');
+
+        // Sites
+        $sitesQuery = Site::with('gerantUser');
+        if ($search) {
+            $sitesQuery->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('adresse', 'like', "%{$search}%")
+                  ->orWhereHas('gerantUser', function ($sub) use ($search) {
+                      $sub->where('nom', 'like', "%{$search}%")
+                          ->orWhere('prenom', 'like', "%{$search}%");
+                  });
+            });
+        }
+        $sites = $sitesQuery->orderBy('id', 'desc')->get();
+
+        // Fermes
+        $fermesQuery = Ferme::with('site', 'gerantUser');
+        if ($search) {
+            $fermesQuery->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhereHas('site', function ($sub) use ($search) {
+                      $sub->where('nom', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('gerantUser', function ($sub) use ($search) {
+                      $sub->where('nom', 'like', "%{$search}%")
+                          ->orWhere('prenom', 'like', "%{$search}%");
+                  });
+            });
+        }
+        if ($siteId) {
+            $fermesQuery->where('idsite', $siteId);
+        }
+        $fermes = $fermesQuery->orderBy('id', 'desc')->get();
+
+        // Magasins
+        $magasinsQuery = Magasin::with('site', 'gerantUser');
+        if ($search) {
+            $magasinsQuery->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhereHas('site', function ($sub) use ($search) {
+                      $sub->where('nom', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('gerantUser', function ($sub) use ($search) {
+                      $sub->where('nom', 'like', "%{$search}%")
+                          ->orWhere('prenom', 'like', "%{$search}%");
+                  });
+            });
+        }
+        if ($siteId) {
+            $magasinsQuery->where('idsite', $siteId);
+        }
+        $magasins = $magasinsQuery->orderBy('id', 'desc')->get();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'sites' => $sites->map(function ($site) {
+                    return [
+                        'id' => $site->id,
+                        'nom' => $site->nom,
+                        'adresse' => $site->adresse,
+                        'latitude' => $site->latitude,
+                        'longitude' => $site->longitude,
+                        'longueur' => $site->longueur,
+                        'largeur' => $site->largeur,
+                        'gerant' => $site->gerantUser ? $site->gerantUser->nom . ' ' . $site->gerantUser->prenom : null,
+                    ];
+                }),
+                'fermes' => $fermes->map(function ($ferme) {
+                    return [
+                        'id' => $ferme->id,
+                        'nom' => $ferme->nom,
+                        'site' => $ferme->site ? $ferme->site->nom : null,
+                        'latitude' => $ferme->latitude,
+                        'longitude' => $ferme->longitude,
+                        'longueur' => $ferme->longueur,
+                        'largeur' => $ferme->largeur,
+                        'gerant' => $ferme->gerantUser ? $ferme->gerantUser->nom . ' ' . $ferme->gerantUser->prenom : null,
+                    ];
+                }),
+                'magasins' => $magasins->map(function ($magasin) {
+                    return [
+                        'id' => $magasin->id,
+                        'nom' => $magasin->nom,
+                        'site' => $magasin->site ? $magasin->site->nom : null,
+                        'latitude' => $magasin->latitude,
+                        'longitude' => $magasin->longitude,
+                        'longueur' => $magasin->longueur,
+                        'largeur' => $magasin->largeur,
+                        'gerant' => $magasin->gerantUser ? $magasin->gerantUser->nom . ' ' . $magasin->gerantUser->prenom : null,
+                    ];
+                }),
+            ]);
+        }
+
+        return view('pages.admin.gestion-entites', compact('allSites', 'sites', 'fermes', 'magasins'));
     }
 
     public function getAllLocations()
@@ -96,7 +189,7 @@ class EntiteController extends Controller
             'gerant' => $request->gerant,
         ]);
 
-        return redirect()->route('admin.entites.index')->with('success', 'Site créé avec succès');
+        return redirect()->back()->with('success', 'Site créé avec succès');
     }
 
     public function updateSite(Request $request, $id)
@@ -126,7 +219,7 @@ class EntiteController extends Controller
             'gerant' => $request->gerant,
         ]);
 
-        return redirect()->route('admin.entites.index')->with('success', 'Site mis à jour avec succès');
+        return redirect()->back()->with('success', 'Site mis à jour avec succès');
     }
 
     public function showSite($id)
@@ -176,7 +269,7 @@ class EntiteController extends Controller
             'gerant' => $request->gerant,
         ]);
 
-        return redirect()->route('admin.entites.index')->with('success', 'Ferme créée avec succès');
+        return redirect()->back()->with('success', 'Ferme créée avec succès');
     }
 
     public function updateFerme(Request $request, $id)
@@ -206,7 +299,7 @@ class EntiteController extends Controller
             'gerant' => $request->gerant,
         ]);
 
-        return redirect()->route('admin.entites.index')->with('success', 'Ferme mise à jour avec succès');
+        return redirect()->back()->with('success', 'Ferme mise à jour avec succès');
     }
 
     public function showFerme($id)
@@ -256,7 +349,7 @@ class EntiteController extends Controller
             'gerant' => $request->gerant,
         ]);
 
-        return redirect()->route('admin.entites.index')->with('success', 'Magasin créé avec succès');
+        return redirect()->back()->with('success', 'Magasin créé avec succès');
     }
 
     public function updateMagasin(Request $request, $id)
@@ -286,7 +379,7 @@ class EntiteController extends Controller
             'gerant' => $request->gerant,
         ]);
 
-        return redirect()->route('admin.entites.index')->with('success', 'Magasin mis à jour avec succès');
+        return redirect()->back()->with('success', 'Magasin mis à jour avec succès');
     }
 
     public function showMagasin($id)

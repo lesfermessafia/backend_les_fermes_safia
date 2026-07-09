@@ -104,7 +104,7 @@
                 </div>
             </a>
 
-            <a href="#" class="group block h-full">
+            <a href="{{ route('admin.poulets.index') }}" class="group block h-full">
                 <div class="h-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-500 hover:shadow-lg">
                     <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-colors group-hover:bg-gray-600 group-hover:text-white">
                         <span class="text-2xl">🐔</span>
@@ -114,7 +114,7 @@
                 </div>
             </a>
 
-            <a href="#" class="group block h-full">
+            <a href="{{ route('admin.formules.index') }}" class="group block h-full">
                 <div class="h-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-[#008d36] hover:shadow-lg">
                     <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#008d36]/10 text-[#008d36] transition-colors group-hover:bg-[#008d36] group-hover:text-white">
                         <span class="text-2xl">📋</span>

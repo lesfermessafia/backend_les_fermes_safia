@@ -8,9 +8,30 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $query = User::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('prenom', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('numero', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role') && $request->input('role') !== 'all') {
+            $query->where('role', $request->input('role'));
+        }
+
+        if ($request->filled('status') && $request->input('status') !== 'all') {
+            $query->where('bloquer', $request->input('status') === 'bloque' ? 1 : 0);
+        }
+
+        $users = $query->orderBy('id', 'desc')->get();
+
         return view('pages.admin.gestion-utilisateur', compact('users'));
     }
 
@@ -34,19 +55,29 @@ class UserController extends Controller
             'numero' => 'required|string',
             'role' => 'required|in:admin,comptable,superviseur',
             'password' => 'required|string|min:6',
+            'photo_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $photoPath = null;
+        if ($request->hasFile('photo_profil')) {
+            $photo = $request->file('photo_profil');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photo->move(public_path('photosProfil'), $photoName);
+            $photoPath = 'photosProfil/' . $photoName;
+        }
 
         User::create([
             'nom' => $request->nom,
             'prenom' => $request->prenom,
             'email' => $request->email,
             'numero' => $request->numero,
+            'photo_profil' => $photoPath,
             'role' => $request->role,
             'password' => Hash::make($request->password),
             'bloquer' => false,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'Utilisateur créé avec succès');
+        return redirect()->back()->with('success', 'Utilisateur créé avec succès');
     }
 
     public function update(Request $request, $id)
@@ -63,21 +94,35 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'numero' => 'required|string',
             'role' => 'required|in:admin,comptable,superviseur',
+            'photo_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $user->update([
+        $updateData = [
             'nom' => $request->nom,
             'prenom' => $request->prenom,
             'email' => $request->email,
             'numero' => $request->numero,
             'role' => $request->role,
-        ]);
+        ];
+
+        if ($request->hasFile('photo_profil')) {
+            if ($user->photo_profil && file_exists(public_path($user->photo_profil))) {
+                unlink(public_path($user->photo_profil));
+            }
+
+            $photo = $request->file('photo_profil');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photo->move(public_path('photosProfil'), $photoName);
+            $updateData['photo_profil'] = 'photosProfil/' . $photoName;
+        }
+
+        $user->update($updateData);
 
         if ($request->filled('password')) {
             $user->update(['password' => Hash::make($request->password)]);
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'Utilisateur mis à jour avec succès');
+        return redirect()->back()->with('success', 'Utilisateur mis à jour avec succès');
     }
 
     public function toggleBlock($id)

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Aliments - Les Fermes Safia</title>
+    <title>Gestion Poulets - Les Fermes Safia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <x-navbar title="Gestion Aliments" color="blue" />
+    <x-navbar title="Gestion Poulets" color="blue" />
 
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6">
@@ -45,22 +45,22 @@
 
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-[#305327]">Liste des Aliments</h2>
+                <h2 class="text-2xl font-bold text-[#305327]">Liste des Poulets</h2>
                 <button onclick="openModal()" class="bg-[#008d36] text-white px-4 py-2 rounded-lg hover:bg-[#305327] transition duration-200">
-                    + Nouvel Aliment
+                    + Nouveau Poulet
                 </button>
             </div>
 
             <!-- Filtre -->
-            <form method="GET" action="{{ route('admin.aliments.index') }}" class="mb-4 filter-form">
+            <form method="GET" action="{{ route('admin.poulets.index') }}" class="mb-4 filter-form">
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="flex-1">
-                        <label for="searchAliments" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                        <input type="text" id="searchAliments" name="search" value="{{ request('search') }}" placeholder="Code ou nom..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <label for="searchPoulets" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                        <input type="text" id="searchPoulets" name="search" value="{{ request('search') }}" placeholder="Code, nom ou race..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                     </div>
                     <div class="flex gap-2">
                         <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                        <a href="{{ route('admin.aliments.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center reset-link">Réinitialiser</a>
+                        <a href="{{ route('admin.poulets.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center reset-link">Réinitialiser</a>
                     </div>
                 </div>
             </form>
@@ -72,30 +72,32 @@
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Photo</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Nom</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Race</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($aliments as $aliment)
+                        @forelse ($poulets as $poulet)
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm">
-                                @if($aliment->photo)
-                                    <img src="{{ asset($aliment->photo) }}" alt="{{ $aliment->nom }}" class="w-12 h-12 object-cover rounded">
+                                @if($poulet->photo)
+                                    <img src="{{ asset($poulet->photo) }}" alt="{{ $poulet->nom }}" class="w-12 h-12 object-cover rounded">
                                 @else
                                     -
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-900">{{ $aliment->code }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-900">{{ $aliment->nom }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $poulet->code }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $poulet->nom }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ $poulet->race }}</td>
                             <td class="px-4 py-3 text-sm">
-                                <button onclick="editAliment({{ $aliment->id }})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
-                                <button onclick="deleteAliment({{ $aliment->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
+                                <button onclick="editPoulet({{ $poulet->id }})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
+                                <button onclick="deletePoulet({{ $poulet->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
-                                Aucun aliment ne correspond aux critères sélectionnés.
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                Aucun poulet ne correspond aux critères sélectionnés.
                             </td>
                         </tr>
                         @endforelse
@@ -106,24 +108,29 @@
     </div>
 
     <!-- Modal -->
-    <div id="alimentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+    <div id="pouletModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 id="modalTitle" class="text-xl font-bold mb-4">Nouvel Aliment</h3>
-            <form id="alimentForm" method="POST" action="{{ route('admin.aliments.store') }}" enctype="multipart/form-data">
+            <h3 id="modalTitle" class="text-xl font-bold mb-4">Nouveau Poulet</h3>
+            <form id="pouletForm" method="POST" action="{{ route('admin.poulets.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" id="_method" name="_method" value="">
-                <input type="hidden" id="alimentId" name="id" value="">
+                <input type="hidden" id="pouletId" name="id" value="">
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Photo</label>
-                    <img id="alimentPhotoPreview" src="" alt="Photo actuelle" class="w-16 h-16 object-cover rounded mb-2 hidden">
-                    <input type="file" id="alimentPhoto" name="photo" accept="image/jpeg,image/png,image/jpg,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                    <img id="pouletPhotoPreview" src="" alt="Photo actuelle" class="w-16 h-16 object-cover rounded mb-2 hidden">
+                    <input type="file" id="pouletPhoto" name="photo" accept="image/jpeg,image/png,image/jpg,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                     <p class="text-xs text-gray-500 mt-1">Formats acceptés: JPEG, PNG, JPG, GIF (max 2MB). Laissez vide pour conserver la photo actuelle.</p>
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                    <input type="text" id="alimentNom" name="nom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                    <input type="text" id="pouletNom" name="nom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Race</label>
+                    <input type="text" id="pouletRace" name="race" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
 
                 <div class="flex justify-end gap-2">
@@ -139,41 +146,43 @@
     </div>
 
     <script>
-        let aliments = @json($aliments);
+        let poulets = @json($poulets);
 
         function openModal() {
-            document.getElementById('alimentModal').classList.remove('hidden');
-            document.getElementById('alimentModal').classList.add('flex');
-            document.getElementById('modalTitle').textContent = 'Nouvel Aliment';
-            document.getElementById('alimentForm').action = '{{ route('admin.aliments.store') }}';
+            document.getElementById('pouletModal').classList.remove('hidden');
+            document.getElementById('pouletModal').classList.add('flex');
+            document.getElementById('modalTitle').textContent = 'Nouveau Poulet';
+            document.getElementById('pouletForm').action = '{{ route('admin.poulets.store') }}';
             document.getElementById('_method').value = '';
-            document.getElementById('alimentId').value = '';
-            document.getElementById('alimentNom').value = '';
-            document.getElementById('alimentPhoto').value = '';
-            document.getElementById('alimentPhotoPreview').classList.add('hidden');
-            document.getElementById('alimentPhotoPreview').src = '';
+            document.getElementById('pouletId').value = '';
+            document.getElementById('pouletNom').value = '';
+            document.getElementById('pouletRace').value = '';
+            document.getElementById('pouletPhoto').value = '';
+            document.getElementById('pouletPhotoPreview').classList.add('hidden');
+            document.getElementById('pouletPhotoPreview').src = '';
         }
 
         function closeModal() {
-            document.getElementById('alimentModal').classList.add('hidden');
-            document.getElementById('alimentModal').classList.remove('flex');
+            document.getElementById('pouletModal').classList.add('hidden');
+            document.getElementById('pouletModal').classList.remove('flex');
         }
 
-        function editAliment(id) {
-            const aliment = aliments.find(a => a.id === id);
-            if (aliment) {
-                document.getElementById('alimentModal').classList.remove('hidden');
-                document.getElementById('alimentModal').classList.add('flex');
-                document.getElementById('modalTitle').textContent = 'Modifier Aliment';
-                document.getElementById('alimentForm').action = '{{ route('admin.aliments.update', ':id') }}'.replace(':id', id);
+        function editPoulet(id) {
+            const poulet = poulets.find(p => p.id === id);
+            if (poulet) {
+                document.getElementById('pouletModal').classList.remove('hidden');
+                document.getElementById('pouletModal').classList.add('flex');
+                document.getElementById('modalTitle').textContent = 'Modifier Poulet';
+                document.getElementById('pouletForm').action = '{{ route('admin.poulets.update', ':id') }}'.replace(':id', id);
                 document.getElementById('_method').value = 'PUT';
-                document.getElementById('alimentId').value = aliment.id;
-                document.getElementById('alimentNom').value = aliment.nom;
-                document.getElementById('alimentPhoto').value = '';
+                document.getElementById('pouletId').value = poulet.id;
+                document.getElementById('pouletNom').value = poulet.nom;
+                document.getElementById('pouletRace').value = poulet.race;
+                document.getElementById('pouletPhoto').value = '';
 
-                const preview = document.getElementById('alimentPhotoPreview');
-                if (aliment.photo) {
-                    preview.src = '/' + aliment.photo;
+                const preview = document.getElementById('pouletPhotoPreview');
+                if (poulet.photo) {
+                    preview.src = '/' + poulet.photo;
                     preview.classList.remove('hidden');
                 } else {
                     preview.src = '';
@@ -182,11 +191,11 @@
             }
         }
 
-        function deleteAliment(id) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cet aliment ?')) {
+        function deletePoulet(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce poulet ?')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '{{ route('admin.aliments.destroy', ':id') }}'.replace(':id', id);
+                form.action = '{{ route('admin.poulets.destroy', ':id') }}'.replace(':id', id);
 
                 const csrfInput = document.createElement('input');
                 csrfInput.type = 'hidden';
@@ -214,36 +223,37 @@
                 .replace(/"/g, '&quot;');
         }
 
-        function renderAliments(items) {
+        function renderPoulets(items) {
             const tbody = document.querySelector('.overflow-x-auto tbody');
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">Aucun aliment ne correspond aux critères sélectionnés.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Aucun poulet ne correspond aux critères sélectionnés.</td></tr>';
                 return;
             }
-            tbody.innerHTML = items.map(a => `
+            tbody.innerHTML = items.map(p => `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="px-4 py-3 text-sm">${a.photo ? `<img src="/${escapeHtml(a.photo)}" alt="${escapeHtml(a.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(a.code)}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(a.nom)}</td>
+                    <td class="px-4 py-3 text-sm">${p.photo ? `<img src="/${escapeHtml(p.photo)}" alt="${escapeHtml(p.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(p.code)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(p.nom)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(p.race)}</td>
                     <td class="px-4 py-3 text-sm">
-                        <button onclick="editAliment(${a.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
-                        <button onclick="deleteAliment(${a.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
+                        <button onclick="editPoulet(${p.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
+                        <button onclick="deletePoulet(${p.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        async function loadAliments(url) {
+        async function loadPoulets(url) {
             try {
                 const response = await fetch(url, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
                 const data = await response.json();
-                aliments = data.aliments;
-                renderAliments(aliments);
+                poulets = data.poulets;
+                renderPoulets(poulets);
             } catch (error) {
-                alert('Erreur lors du chargement des aliments: ' + error.message);
+                alert('Erreur lors du chargement des poulets: ' + error.message);
             }
         }
 
@@ -256,7 +266,7 @@
                     e.preventDefault();
                     const formData = new URLSearchParams(new FormData(form));
                     const url = `${form.action}?${formData.toString()}`;
-                    loadAliments(url);
+                    loadPoulets(url);
                     history.pushState({}, '', url);
                 });
             }
@@ -266,14 +276,14 @@
                     e.preventDefault();
                     form.reset();
                     const url = form.action;
-                    loadAliments(url);
+                    loadPoulets(url);
                     history.pushState({}, '', url);
                 });
             }
         });
 
         window.addEventListener('popstate', function() {
-            loadAliments(window.location.href);
+            loadPoulets(window.location.href);
         });
     </script>
 </body>

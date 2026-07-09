@@ -8,6 +8,7 @@ class Formule extends Model
 {
     protected $fillable = [
         'nom',
+        'photo',
         'composant',
     ];
 
