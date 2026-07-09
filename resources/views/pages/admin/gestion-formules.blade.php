@@ -89,7 +89,7 @@
                             <td class="px-4 py-3 text-sm text-gray-600">
                                 <ul class="list-disc list-inside">
                                     @foreach ($formule['composant'] as $c)
-                                        <li>{{ $c['matiere_nom'] }} : {{ $c['quantite'] }} {{ $c['matiere_unite'] }}</li>
+                                        <li>{{ $c['matiere_nom'] }} : {{ $c['quantite'] }} %</li>
                                     @endforeach
                                 </ul>
                             </td>
@@ -167,16 +167,17 @@
             select.required = true;
             select.className = 'flex-1 px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#008d36]';
             select.innerHTML = '<option value="">-- Matière première --</option>' +
-                matieresPremieres.map(m => `<option value="${m.id}" ${m.id === matiereId ? 'selected' : ''}>${m.nom} (${m.unite})</option>`).join('');
+                matieresPremieres.map(m => `<option value="${m.id}" ${m.id === matiereId ? 'selected' : ''}>${m.nom}</option>`).join('');
 
             const qtyInput = document.createElement('input');
             qtyInput.type = 'number';
             qtyInput.step = '0.01';
             qtyInput.min = '0';
+            qtyInput.max = '100';
             qtyInput.name = `composant[${composantIndex}][quantite]`;
             qtyInput.value = quantite;
             qtyInput.required = true;
-            qtyInput.placeholder = 'Quantité';
+            qtyInput.placeholder = 'Pourcentage (%)';
             qtyInput.className = 'w-28 px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#008d36]';
 
             const removeBtn = document.createElement('button');
@@ -287,7 +288,7 @@
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(f.nom)}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">
                         <ul class="list-disc list-inside">
-                            ${(f.composant || []).map(c => `<li>${escapeHtml(c.matiere_nom)} : ${escapeHtml(c.quantite)} ${escapeHtml(c.matiere_unite)}</li>`).join('')}
+                            ${(f.composant || []).map(c => `<li>${escapeHtml(c.matiere_nom)} : ${escapeHtml(c.quantite)} %</li>`).join('')}
                         </ul>
                     </td>
                     <td class="px-4 py-3 text-sm">
