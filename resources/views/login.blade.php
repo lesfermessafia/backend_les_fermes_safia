@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Les Fermes Safia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">Les Fermes Safia</h1>
+            <h1 class="text-2xl font-bold text-[#305327]">Les Fermes Safia</h1>
             <p class="text-gray-600 mt-2">Système de Gestion</p>
+            <div class="mt-4 flex justify-center">
+                <img src="{{ asset('images/toolou-safia-logo.png') }}" alt="Les Fermes Safia" class="h-20 w-auto" />
+            </div>
         </div>
 
         @if ($errors->any())
@@ -24,19 +28,19 @@
             <div class="mb-4">
                 <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
                 <input type="email" id="email" name="email" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]"
                     placeholder="admin@example.com">
             </div>
 
             <div class="mb-6">
                 <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
                 <input type="password" id="password" name="password" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]"
                     placeholder="••••••••">
             </div>
 
             <button type="submit"
-                class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                class="w-full bg-[#008d36] text-white font-bold py-2 px-4 rounded-md hover:bg-[#305327] transition duration-200">
                 Se connecter
             </button>
         </form>

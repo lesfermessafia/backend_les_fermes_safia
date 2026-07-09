@@ -6,11 +6,21 @@
     <title>Gestion Utilisateurs - Les Fermes Safia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 </head>
 <body class="bg-gray-100 min-h-screen">
     <x-navbar title="Gestion Utilisateurs" color="blue" />
 
     <div class="container mx-auto px-4 py-8">
+        <div class="mb-6">
+            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-[#008d36] hover:text-[#305327] font-medium transition duration-200">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Retour au Dashboard
+            </a>
+        </div>
+
         @if(session('success'))
             <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                 {{ session('success') }}
@@ -43,8 +53,8 @@
 
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Gestion des Utilisateurs</h2>
-                <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                <h2 class="text-2xl font-bold text-[#305327]">Gestion des Utilisateurs</h2>
+                <button onclick="openModal()" class="bg-[#008d36] text-white px-4 py-2 rounded-lg hover:bg-[#305327] transition duration-200">
                     + Nouvel Utilisateur
                 </button>
             </div>
@@ -53,13 +63,13 @@
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nom</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Prénom</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Téléphone</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Rôle</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Statut</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Nom</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Prénom</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Email</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Téléphone</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Rôle</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Statut</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,9 +81,9 @@
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $user->numero }}</td>
                             <td class="px-4 py-3 text-sm">
                                 <span class="px-2 py-1 rounded-full text-xs font-semibold
-                                    @if($user->role === 'admin') bg-purple-100 text-purple-700
-                                    @elseif($user->role === 'comptable') bg-green-100 text-green-700
-                                    @elseif($user->role === 'superviseur') bg-blue-100 text-blue-700
+                                    @if($user->role === 'admin') bg-[#305327]/10 text-[#305327]
+                                    @elseif($user->role === 'comptable') bg-[#008d36]/10 text-[#008d36]
+                                    @elseif($user->role === 'superviseur') bg-gray-100 text-gray-700
                                     @else bg-gray-100 text-gray-700 @endif">
                                     {{ ucfirst($user->role) }}
                                 </span>
@@ -118,27 +128,27 @@
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                    <input type="text" id="nom" name="nom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="nom" name="nom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-                    <input type="text" id="prenom" name="prenom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="prenom" name="prenom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                    <input type="text" id="numero" name="numero" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="numero" name="numero" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
-                    <select id="role" name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="role" name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                         <option value="admin">Admin</option>
                         <option value="comptable">Comptable</option>
                         <option value="superviseur">Superviseur</option>
@@ -147,14 +157,14 @@
                 
                 <div class="mb-4" id="passwordField">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-                    <input type="password" id="password" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="password" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
                 
                 <div class="flex justify-end gap-2">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">
                         Annuler
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                    <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">
                         Enregistrer
                     </button>
                 </div>

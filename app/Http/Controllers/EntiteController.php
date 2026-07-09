@@ -1,0 +1,315 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Site;
+use App\Models\Ferme;
+use App\Models\Magasin;
+
+class EntiteController extends Controller
+{
+    public function index()
+    {
+        $sites = Site::with('gerantUser')->get();
+        $fermes = Ferme::with('site', 'gerantUser')->get();
+        $magasins = Magasin::with('site', 'gerantUser')->get();
+        
+        return view('pages.admin.gestion-entites', compact('sites', 'fermes', 'magasins'));
+    }
+
+    public function getAllLocations()
+    {
+        $sites = Site::with('gerantUser')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get()
+            ->map(function($site) {
+                return [
+                    'id' => $site->id,
+                    'nom' => $site->nom,
+                    'type' => 'site',
+                    'latitude' => $site->latitude,
+                    'longitude' => $site->longitude,
+                    'site' => null,
+                    'gerant' => $site->gerantUser ? $site->gerantUser->nom . ' ' . $site->gerantUser->prenom : null,
+                ];
+            });
+
+        $fermes = Ferme::with('site', 'gerantUser')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get()
+            ->map(function($ferme) {
+                return [
+                    'id' => $ferme->id,
+                    'nom' => $ferme->nom,
+                    'type' => 'ferme',
+                    'latitude' => $ferme->latitude,
+                    'longitude' => $ferme->longitude,
+                    'site' => $ferme->site ? $ferme->site->nom : null,
+                    'gerant' => $ferme->gerantUser ? $ferme->gerantUser->nom . ' ' . $ferme->gerantUser->prenom : null,
+                ];
+            });
+
+        $magasins = Magasin::with('site', 'gerantUser')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get()
+            ->map(function($magasin) {
+                return [
+                    'id' => $magasin->id,
+                    'nom' => $magasin->nom,
+                    'type' => 'magasin',
+                    'latitude' => $magasin->latitude,
+                    'longitude' => $magasin->longitude,
+                    'site' => $magasin->site ? $magasin->site->nom : null,
+                    'gerant' => $magasin->gerantUser ? $magasin->gerantUser->nom . ' ' . $magasin->gerantUser->prenom : null,
+                ];
+            });
+
+        $locations = $sites->concat($fermes)->concat($magasins);
+
+        return response()->json($locations);
+    }
+
+    // Sites
+    public function storeSite(Request $request)
+    {
+        $request->validate([
+            'nom' => 'required|string',
+            'adresse' => 'nullable|string',
+            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'gerant' => 'nullable|exists:users,id',
+        ]);
+
+        Site::create([
+            'nom' => $request->nom,
+            'adresse' => $request->adresse,
+            'longitude' => $request->longitude,
+            'latitude' => $request->latitude,
+            'longueur' => $request->longueur,
+            'largeur' => $request->largeur,
+            'gerant' => $request->gerant,
+        ]);
+
+        return redirect()->route('admin.entites.index')->with('success', 'Site créé avec succès');
+    }
+
+    public function updateSite(Request $request, $id)
+    {
+        $request->validate([
+            'nom' => 'required|string',
+            'adresse' => 'nullable|string',
+            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'gerant' => 'nullable|exists:users,id',
+        ]);
+
+        $site = Site::find($id);
+        if (!$site) {
+            return response()->json(['error' => 'Site non trouvé'], 404);
+        }
+
+        $site->update([
+            'nom' => $request->nom,
+            'adresse' => $request->adresse,
+            'longitude' => $request->longitude,
+            'latitude' => $request->latitude,
+            'longueur' => $request->longueur,
+            'largeur' => $request->largeur,
+            'gerant' => $request->gerant,
+        ]);
+
+        return redirect()->route('admin.entites.index')->with('success', 'Site mis à jour avec succès');
+    }
+
+    public function showSite($id)
+    {
+        $site = Site::with('gerantUser')->find($id);
+        
+        if (!$site) {
+            return response()->json(['error' => 'Site non trouvé'], 404);
+        }
+
+        return response()->json($site);
+    }
+
+    public function destroySite($id)
+    {
+        $site = Site::find($id);
+        
+        if (!$site) {
+            return response()->json(['error' => 'Site non trouvé'], 404);
+        }
+
+        $site->delete();
+
+        return response()->json(['message' => 'Site supprimé avec succès']);
+    }
+
+    // Fermes
+    public function storeFerme(Request $request)
+    {
+        $request->validate([
+            'nom' => 'required|string',
+            'idsite' => 'required|exists:sites,id',
+            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'gerant' => 'nullable|exists:users,id',
+        ]);
+
+        Ferme::create([
+            'nom' => $request->nom,
+            'idsite' => $request->idsite,
+            'longitude' => $request->longitude,
+            'latitude' => $request->latitude,
+            'longueur' => $request->longueur,
+            'largeur' => $request->largeur,
+            'gerant' => $request->gerant,
+        ]);
+
+        return redirect()->route('admin.entites.index')->with('success', 'Ferme créée avec succès');
+    }
+
+    public function updateFerme(Request $request, $id)
+    {
+        $request->validate([
+            'nom' => 'required|string',
+            'idsite' => 'required|exists:sites,id',
+            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'gerant' => 'nullable|exists:users,id',
+        ]);
+
+        $ferme = Ferme::find($id);
+        if (!$ferme) {
+            return response()->json(['error' => 'Ferme non trouvée'], 404);
+        }
+
+        $ferme->update([
+            'nom' => $request->nom,
+            'idsite' => $request->idsite,
+            'longitude' => $request->longitude,
+            'latitude' => $request->latitude,
+            'longueur' => $request->longueur,
+            'largeur' => $request->largeur,
+            'gerant' => $request->gerant,
+        ]);
+
+        return redirect()->route('admin.entites.index')->with('success', 'Ferme mise à jour avec succès');
+    }
+
+    public function showFerme($id)
+    {
+        $ferme = Ferme::with('site')->find($id);
+        
+        if (!$ferme) {
+            return response()->json(['error' => 'Ferme non trouvée'], 404);
+        }
+
+        return response()->json($ferme);
+    }
+
+    public function destroyFerme($id)
+    {
+        $ferme = Ferme::find($id);
+        
+        if (!$ferme) {
+            return response()->json(['error' => 'Ferme non trouvée'], 404);
+        }
+
+        $ferme->delete();
+
+        return response()->json(['message' => 'Ferme supprimée avec succès']);
+    }
+
+    // Magasins
+    public function storeMagasin(Request $request)
+    {
+        $request->validate([
+            'nom' => 'required|string',
+            'idsite' => 'required|exists:sites,id',
+            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'gerant' => 'nullable|exists:users,id',
+        ]);
+
+        Magasin::create([
+            'nom' => $request->nom,
+            'idsite' => $request->idsite,
+            'longitude' => $request->longitude,
+            'latitude' => $request->latitude,
+            'longueur' => $request->longueur,
+            'largeur' => $request->largeur,
+            'gerant' => $request->gerant,
+        ]);
+
+        return redirect()->route('admin.entites.index')->with('success', 'Magasin créé avec succès');
+    }
+
+    public function updateMagasin(Request $request, $id)
+    {
+        $request->validate([
+            'nom' => 'required|string',
+            'idsite' => 'required|exists:sites,id',
+            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'gerant' => 'nullable|exists:users,id',
+        ]);
+
+        $magasin = Magasin::find($id);
+        if (!$magasin) {
+            return response()->json(['error' => 'Magasin non trouvé'], 404);
+        }
+
+        $magasin->update([
+            'nom' => $request->nom,
+            'idsite' => $request->idsite,
+            'longitude' => $request->longitude,
+            'latitude' => $request->latitude,
+            'longueur' => $request->longueur,
+            'largeur' => $request->largeur,
+            'gerant' => $request->gerant,
+        ]);
+
+        return redirect()->route('admin.entites.index')->with('success', 'Magasin mis à jour avec succès');
+    }
+
+    public function showMagasin($id)
+    {
+        $magasin = Magasin::with('site')->find($id);
+        
+        if (!$magasin) {
+            return response()->json(['error' => 'Magasin non trouvé'], 404);
+        }
+
+        return response()->json($magasin);
+    }
+
+    public function destroyMagasin($id)
+    {
+        $magasin = Magasin::find($id);
+        
+        if (!$magasin) {
+            return response()->json(['error' => 'Magasin non trouvé'], 404);
+        }
+
+        $magasin->delete();
+
+        return response()->json(['message' => 'Magasin supprimé avec succès']);
+    }
+}

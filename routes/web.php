@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EntiteController;
+use App\Http\Controllers\MatierePremiereWebController;
+use App\Http\Controllers\AlimentWebController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -30,6 +33,52 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [UserController::class, 'update'])->name('update');
         Route::post('/{id}/toggle-block', [UserController::class, 'toggleBlock'])->name('toggleBlock');
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
+    });
+
+    // Routes de gestion unifiée des entités (Admin uniquement)
+    Route::middleware('role:admin')->prefix('admin/entites')->name('admin.entites.')->group(function () {
+        Route::get('/', [EntiteController::class, 'index'])->name('index');
+        Route::get('/locations', [EntiteController::class, 'getAllLocations'])->name('locations');
+        
+        // Sites
+        Route::prefix('sites')->name('sites.')->group(function () {
+            Route::post('/', [EntiteController::class, 'storeSite'])->name('store');
+            Route::get('/{id}', [EntiteController::class, 'showSite'])->name('show');
+            Route::put('/{id}', [EntiteController::class, 'updateSite'])->name('update');
+            Route::delete('/{id}', [EntiteController::class, 'destroySite'])->name('destroy');
+        });
+        
+        // Fermes
+        Route::prefix('fermes')->name('fermes.')->group(function () {
+            Route::post('/', [EntiteController::class, 'storeFerme'])->name('store');
+            Route::get('/{id}', [EntiteController::class, 'showFerme'])->name('show');
+            Route::put('/{id}', [EntiteController::class, 'updateFerme'])->name('update');
+            Route::delete('/{id}', [EntiteController::class, 'destroyFerme'])->name('destroy');
+        });
+        
+        // Magasins
+        Route::prefix('magasins')->name('magasins.')->group(function () {
+            Route::post('/', [EntiteController::class, 'storeMagasin'])->name('store');
+            Route::get('/{id}', [EntiteController::class, 'showMagasin'])->name('show');
+            Route::put('/{id}', [EntiteController::class, 'updateMagasin'])->name('update');
+            Route::delete('/{id}', [EntiteController::class, 'destroyMagasin'])->name('destroy');
+        });
+    });
+
+    // Routes de gestion des matières premières (Admin uniquement)
+    Route::middleware('role:admin')->prefix('admin/matieres-premieres')->name('admin.matieres-premieres.')->group(function () {
+        Route::get('/', [MatierePremiereWebController::class, 'index'])->name('index');
+        Route::post('/', [MatierePremiereWebController::class, 'store'])->name('store');
+        Route::put('/{id}', [MatierePremiereWebController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MatierePremiereWebController::class, 'destroy'])->name('destroy');
+    });
+
+    // Routes de gestion des aliments (Admin uniquement)
+    Route::middleware('role:admin')->prefix('admin/aliments')->name('admin.aliments.')->group(function () {
+        Route::get('/', [AlimentWebController::class, 'index'])->name('index');
+        Route::post('/', [AlimentWebController::class, 'store'])->name('store');
+        Route::put('/{id}', [AlimentWebController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AlimentWebController::class, 'destroy'])->name('destroy');
     });
 
     // Dashboard Comptable
