@@ -83,7 +83,7 @@
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $matiere->nom }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600">
                                 @if($matiere->image)
-                                    <img src="{{ asset($matiere->image) }}" alt="{{ $matiere->nom }}" class="w-12 h-12 object-cover rounded">
+                                    <img src="{{ url('img/' . $matiere->image) }}" alt="{{ $matiere->nom }}" class="w-12 h-12 object-cover rounded">
                                 @else
                                     -
                                 @endif
@@ -103,6 +103,22 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div id="pagination-matieres" class="mt-4">
+                {{ $matieres->links() }}
+            </div>
+
+            <div id="stats-matieres" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                    <p class="text-sm text-[#305327] font-medium">Total Matières Premières</p>
+                    <p class="text-2xl font-bold text-[#305327]" id="stats-matieres-total">{{ $totalMatieres }}</p>
+                </div>
+                @foreach ($statsByUnite as $unite => $count)
+                <div class="bg-[#008d36]/10 rounded-lg p-4 border border-[#008d36]/20">
+                    <p class="text-sm text-[#008d36] font-medium">Unité : {{ $unite }}</p>
+                    <p class="text-2xl font-bold text-[#008d36] stats-matieres-unite" data-unite="{{ $unite }}">{{ $count }}</p>
+                </div>
+                @endforeach
             </div>
         </div>
     </div>
@@ -146,7 +162,7 @@
     </div>
 
     <script>
-        let matieres = @json($matieres);
+        let matieres = @json($matieres->items());
 
         function openModal() {
             document.getElementById('matiereModal').classList.remove('hidden');
@@ -182,7 +198,7 @@
 
                 const preview = document.getElementById('matiereImagePreview');
                 if (matiere.image) {
-                    preview.src = '/' + matiere.image;
+                    preview.src = '/img/' + matiere.image;
                     preview.classList.remove('hidden');
                 } else {
                     preview.src = '';
@@ -233,7 +249,7 @@
                 <tr class="border-b hover:bg-gray-50">
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(m.code)}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(m.nom)}</td>
-                    <td class="px-4 py-3 text-sm text-gray-600">${m.image ? `<img src="/${escapeHtml(m.image)}" alt="${escapeHtml(m.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${m.image ? `<img src="/img/${escapeHtml(m.image)}" alt="${escapeHtml(m.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(m.unite)}</td>
                     <td class="px-4 py-3 text-sm">
                         <button onclick="editMatiere(${m.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
@@ -241,6 +257,28 @@
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function renderMatiereStats(total, byUnite) {
+            const container = document.getElementById('stats-matieres');
+            if (!container) return;
+            let html = `
+                <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                    <p class="text-sm text-[#305327] font-medium">Total Matières Premières</p>
+                    <p class="text-2xl font-bold text-[#305327]">${escapeHtml(String(total))}</p>
+                </div>
+            `;
+            if (byUnite) {
+                Object.entries(byUnite).forEach(([unite, count]) => {
+                    html += `
+                        <div class="bg-[#008d36]/10 rounded-lg p-4 border border-[#008d36]/20">
+                            <p class="text-sm text-[#008d36] font-medium">Unité : ${escapeHtml(unite)}</p>
+                            <p class="text-2xl font-bold text-[#008d36]">${escapeHtml(String(count))}</p>
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
         }
 
         async function loadMatieres(url) {
@@ -252,6 +290,11 @@
                 const data = await response.json();
                 matieres = data.matieres;
                 renderMatieres(matieres);
+                const paginationContainer = document.getElementById('pagination-matieres');
+                if (paginationContainer && data.pagination !== undefined) {
+                    paginationContainer.innerHTML = data.pagination;
+                }
+                renderMatiereStats(data.total !== undefined ? data.total : 0, data.byUnite);
             } catch (error) {
                 alert('Erreur lors du chargement des matières premières: ' + error.message);
             }

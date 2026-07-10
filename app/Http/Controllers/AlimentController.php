@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Aliment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AlimentController extends Controller
 {
     public function index()
     {
-        $aliments = Aliment::all();
+        $aliments = Aliment::all()->map(function ($aliment) {
+            $aliment->photo_url = $aliment->photo ? url('img/' . $aliment->photo) : null;
+            return $aliment;
+        });
         return response()->json($aliments);
     }
 
@@ -21,6 +25,7 @@ class AlimentController extends Controller
             return response()->json(['error' => 'Aliment not found'], 404);
         }
         
+        $aliment->photo_url = $aliment->photo ? url('img/' . $aliment->photo) : null;
         return response()->json($aliment);
     }
 
@@ -35,8 +40,7 @@ class AlimentController extends Controller
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageAliment'), $photoName);
-            $photoPath = 'imageAliment/' . $photoName;
+            $photoPath = $photo->storeAs('imageAliment', $photoName, 'public');
         }
 
         $aliment = Aliment::create([
@@ -45,6 +49,7 @@ class AlimentController extends Controller
             'photo' => $photoPath,
         ]);
 
+        $aliment->photo_url = $aliment->photo ? url('img/' . $aliment->photo) : null;
         return response()->json([
             'message' => 'Aliment created successfully',
             'aliment' => $aliment
@@ -70,18 +75,18 @@ class AlimentController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            if ($aliment->photo && file_exists(public_path($aliment->photo))) {
-                unlink(public_path($aliment->photo));
+            if ($aliment->photo && Storage::disk('public')->exists($aliment->photo)) {
+                Storage::disk('public')->delete($aliment->photo);
             }
 
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageAliment'), $photoName);
-            $updateData['photo'] = 'imageAliment/' . $photoName;
+            $updateData['photo'] = $photo->storeAs('imageAliment', $photoName, 'public');
         }
 
         $aliment->update($updateData);
 
+        $aliment->photo_url = $aliment->photo ? url('img/' . $aliment->photo) : null;
         return response()->json([
             'message' => 'Aliment updated successfully',
             'aliment' => $aliment

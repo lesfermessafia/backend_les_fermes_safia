@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -30,9 +31,19 @@ class UserController extends Controller
             $query->where('bloquer', $request->input('status') === 'bloque' ? 1 : 0);
         }
 
-        $users = $query->orderBy('id', 'desc')->get();
+        $users = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
-        return view('pages.admin.gestion-utilisateur', compact('users'));
+        $roleStats = User::selectRaw('role, COUNT(*) as total')
+            ->groupBy('role')
+            ->pluck('total', 'role')
+            ->toArray();
+
+        $statusStats = [
+            'actif' => User::where('bloquer', 0)->count(),
+            'bloque' => User::where('bloquer', 1)->count(),
+        ];
+
+        return view('pages.admin.gestion-utilisateur', compact('users', 'roleStats', 'statusStats'));
     }
 
     public function show($id)
@@ -43,6 +54,7 @@ class UserController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
+        $user->photo_profil_url = $user->photo_profil ? url('img/' . $user->photo_profil) : null;
         return response()->json($user->makeHidden(['password']));
     }
 
@@ -62,8 +74,7 @@ class UserController extends Controller
         if ($request->hasFile('photo_profil')) {
             $photo = $request->file('photo_profil');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('photosProfil'), $photoName);
-            $photoPath = 'photosProfil/' . $photoName;
+            $photoPath = $photo->storeAs('photosProfil', $photoName, 'public');
         }
 
         User::create([
@@ -106,14 +117,13 @@ class UserController extends Controller
         ];
 
         if ($request->hasFile('photo_profil')) {
-            if ($user->photo_profil && file_exists(public_path($user->photo_profil))) {
-                unlink(public_path($user->photo_profil));
+            if ($user->photo_profil && Storage::disk('public')->exists($user->photo_profil)) {
+                Storage::disk('public')->delete($user->photo_profil);
             }
 
             $photo = $request->file('photo_profil');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('photosProfil'), $photoName);
-            $updateData['photo_profil'] = 'photosProfil/' . $photoName;
+            $updateData['photo_profil'] = $photo->storeAs('photosProfil', $photoName, 'public');
         }
 
         $user->update($updateData);
@@ -153,6 +163,10 @@ class UserController extends Controller
 
         if ($user->role === 'admin') {
             return response()->json(['error' => 'Impossible de supprimer un administrateur'], 403);
+        }
+
+        if ($user->photo_profil && Storage::disk('public')->exists($user->photo_profil)) {
+            Storage::disk('public')->delete($user->photo_profil);
         }
 
         $user->delete();

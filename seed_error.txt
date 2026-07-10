@@ -1,0 +1,148 @@
+﻿
+   INFO  Seeding database.  
+
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'code' cannot be null (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: fermesafia, SQL: insert into `matiere_premieres` (`nom`, `code`, `image`, `unite`, `updated_at`, `created_at`) values (quia, ?, ?, L, 2026-07-09 16:52:24, 2026-07-09 16:52:24))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+    834Ôûò             $exceptionType = $this->isUniqueConstraintError($e)
+    835Ôûò                 ? UniqueConstraintViolationException::class
+    836Ôûò                 : QueryException::class;
+    837Ôûò 
+  Ô×£ 838Ôûò             throw new $exceptionType(
+    839Ôûò                 $this->getNameWithReadWriteType(),
+    840Ôûò                 $query,
+    841Ôûò                 $this->prepareBindings($bindings),
+    842Ôûò                 $e,
+
+  1   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+      PDOException::("SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'code' cannot be null")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+      PDOStatement::execute()
+
+  3   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+      Illuminate\Database\MySqlConnection::Illuminate\Database\{closure}("insert into `matiere_premieres` (`nom`, `code`, `image`, `unite`, `updated_at`, `created_at`) values (?, ?, ?, ?, ?, ?)")
+
+  4   vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+      Illuminate\Database\Connection::runQueryCallback("insert into `matiere_premieres` (`nom`, `code`, `image`, `unite`, `updated_at`, `created_at`) values (?, ?, ?, ?, ?, ?)", Object(Closure))
+
+  5   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+      Illuminate\Database\Connection::run("insert into `matiere_premieres` (`nom`, `code`, `image`, `unite`, `updated_at`, `created_at`) values (?, ?, ?, ?, ?, ?)", Object(Closure))
+
+  6   vendor\laravel\framework\src\Illuminate\Database\Query\Processors\MySqlProcessor.php:35
+      Illuminate\Database\MySqlConnection::insert("insert into `matiere_premieres` (`nom`, `code`, `image`, `unite`, `updated_at`, `created_at`) values (?, ?, ?, ?, ?, ?)", "id")
+
+  7   vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+      Illuminate\Database\Query\Processors\MySqlProcessor::processInsertGetId(Object(Illuminate\Database\Query\Builder), "insert into `matiere_premieres` (`nom`, `code`, `image`, `unite`, `updated_at`, `created_at`) values (?, ?, ?, ?, ?, ?)", "id")
+
+  8   vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+      Illuminate\Database\Query\Builder::insertGetId("id")
+
+  9   vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+      Illuminate\Database\Eloquent\Builder::__call("insertGetId")
+
+  10  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+      Illuminate\Database\Eloquent\Model::insertAndSetId(Object(Illuminate\Database\Eloquent\Builder))
+
+  11  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+      Illuminate\Database\Eloquent\Model::performInsert(Object(Illuminate\Database\Eloquent\Builder))
+
+  12  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:370
+      Illuminate\Database\Eloquent\Model::save()
+
+  13  vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:275
+      Illuminate\Database\Eloquent\Factories\Factory::Illuminate\Database\Eloquent\Factories\{closure}(Object(App\Models\MatierePremiere))
+
+  14  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:365
+      Illuminate\Support\Collection::each(Object(Closure))
+
+  15  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:325
+      Illuminate\Database\Eloquent\Factories\Factory::store(Object(Illuminate\Database\Eloquent\Collection))
+
+  16  database\seeders\DemoDataSeeder.php:72
+      Illuminate\Database\Eloquent\Factories\Factory::create()
+
+  17  database\seeders\DemoDataSeeder.php:24
+      Database\Seeders\DemoDataSeeder::seedMatierePremieres()
+
+  18  vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:36
+      Database\Seeders\DemoDataSeeder::run()
+
+  19  vendor\laravel\framework\src\Illuminate\Container\Util.php:43
+      Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+
+  20  vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:96
+      Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+
+  21  vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:35
+      Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Object(Closure))
+
+  22  vendor\laravel\framework\src\Illuminate\Container\Container.php:799
+      Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), [])
+
+  23  vendor\laravel\framework\src\Illuminate\Database\Seeder.php:184
+      Illuminate\Container\Container::call([])
+
+  24  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasEvents.php:454
+      Illuminate\Database\Seeder::Illuminate\Database\{closure}()
+
+  25  vendor\laravel\framework\src\Illuminate\Database\Console\Seeds\WithoutModelEvents.php:17
+      Illuminate\Database\Eloquent\Model::withoutEvents(Object(Closure))
+
+  26  vendor\laravel\framework\src\Illuminate\Database\Seeder.php:193
+      Database\Seeders\DemoDataSeeder::Illuminate\Database\Console\Seeds\{closure}()
+
+  27  vendor\laravel\framework\src\Illuminate\Database\Console\Seeds\SeedCommand.php:71
+      Illuminate\Database\Seeder::__invoke()
+
+  28  vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\GuardsAttributes.php:157
+      Illuminate\Database\Console\Seeds\SeedCommand::Illuminate\Database\Console\Seeds\{closure}()
+
+  29  vendor\laravel\framework\src\Illuminate\Database\Console\Seeds\SeedCommand.php:70
+      Illuminate\Database\Eloquent\Model::unguarded(Object(Closure))
+
+  30  vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:36
+      Illuminate\Database\Console\Seeds\SeedCommand::handle()
+
+  31  vendor\laravel\framework\src\Illuminate\Container\Util.php:43
+      Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+
+  32  vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:96
+      Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+
+  33  vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:35
+      Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Object(Closure))
+
+  34  vendor\laravel\framework\src\Illuminate\Container\Container.php:799
+      Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), [])
+
+  35  vendor\laravel\framework\src\Illuminate\Console\Command.php:211
+      Illuminate\Container\Container::call()
+
+  36  vendor\symfony\console\Command\Command.php:341
+      Illuminate\Console\Command::execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+
+  37  vendor\laravel\framework\src\Illuminate\Console\Command.php:180
+      Symfony\Component\Console\Command\Command::run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+
+  38  vendor\symfony\console\Application.php:1117
+      Illuminate\Console\Command::run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+  39  vendor\symfony\console\Application.php:356
+      Symfony\Component\Console\Application::doRunCommand(Object(Illuminate\Database\Console\Seeds\SeedCommand), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+  40  vendor\symfony\console\Application.php:195
+      Symfony\Component\Console\Application::doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+  41  vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:198
+      Symfony\Component\Console\Application::run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+  42  vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1235
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+  43  artisan:16
+      Illuminate\Foundation\Application::handleCommand(Object(Symfony\Component\Console\Input\ArgvInput))
+

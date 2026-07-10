@@ -27,7 +27,7 @@ class EntiteController extends Controller
                   });
             });
         }
-        $sites = $sitesQuery->orderBy('id', 'desc')->get();
+        $sites = $sitesQuery->orderBy('id', 'desc')->paginate(10, ['*'], 'sites_page')->withQueryString();
 
         // Fermes
         $fermesQuery = Ferme::with('site', 'gerantUser');
@@ -46,7 +46,7 @@ class EntiteController extends Controller
         if ($siteId) {
             $fermesQuery->where('idsite', $siteId);
         }
-        $fermes = $fermesQuery->orderBy('id', 'desc')->get();
+        $fermes = $fermesQuery->orderBy('id', 'desc')->paginate(10, ['*'], 'fermes_page')->withQueryString();
 
         // Magasins
         $magasinsQuery = Magasin::with('site', 'gerantUser');
@@ -65,50 +65,82 @@ class EntiteController extends Controller
         if ($siteId) {
             $magasinsQuery->where('idsite', $siteId);
         }
-        $magasins = $magasinsQuery->orderBy('id', 'desc')->get();
+        $magasins = $magasinsQuery->orderBy('id', 'desc')->paginate(10, ['*'], 'magasins_page')->withQueryString();
+
+        $stats = [
+            'totalSites' => $sitesQuery->count(),
+            'totalFermes' => $fermesQuery->count(),
+            'totalMagasins' => $magasinsQuery->count(),
+            'fermesBySite' => Ferme::selectRaw('idsite, COUNT(*) as total')
+                ->groupBy('idsite')
+                ->get()
+                ->mapWithKeys(function ($item) use ($allSites) {
+                    $site = $allSites->firstWhere('id', $item->idsite);
+                    return [($site ? $site->nom : 'Site #' . $item->idsite) => $item->total];
+                })
+                ->toArray(),
+            'magasinsBySite' => Magasin::selectRaw('idsite, COUNT(*) as total')
+                ->groupBy('idsite')
+                ->get()
+                ->mapWithKeys(function ($item) use ($allSites) {
+                    $site = $allSites->firstWhere('id', $item->idsite);
+                    return [($site ? $site->nom : 'Site #' . $item->idsite) => $item->total];
+                })
+                ->toArray(),
+        ];
 
         if ($request->ajax()) {
             return response()->json([
-                'sites' => $sites->map(function ($site) {
-                    return [
-                        'id' => $site->id,
-                        'nom' => $site->nom,
-                        'adresse' => $site->adresse,
-                        'latitude' => $site->latitude,
-                        'longitude' => $site->longitude,
-                        'longueur' => $site->longueur,
-                        'largeur' => $site->largeur,
-                        'gerant' => $site->gerantUser ? $site->gerantUser->nom . ' ' . $site->gerantUser->prenom : null,
-                    ];
-                }),
-                'fermes' => $fermes->map(function ($ferme) {
-                    return [
-                        'id' => $ferme->id,
-                        'nom' => $ferme->nom,
-                        'site' => $ferme->site ? $ferme->site->nom : null,
-                        'latitude' => $ferme->latitude,
-                        'longitude' => $ferme->longitude,
-                        'longueur' => $ferme->longueur,
-                        'largeur' => $ferme->largeur,
-                        'gerant' => $ferme->gerantUser ? $ferme->gerantUser->nom . ' ' . $ferme->gerantUser->prenom : null,
-                    ];
-                }),
-                'magasins' => $magasins->map(function ($magasin) {
-                    return [
-                        'id' => $magasin->id,
-                        'nom' => $magasin->nom,
-                        'site' => $magasin->site ? $magasin->site->nom : null,
-                        'latitude' => $magasin->latitude,
-                        'longitude' => $magasin->longitude,
-                        'longueur' => $magasin->longueur,
-                        'largeur' => $magasin->largeur,
-                        'gerant' => $magasin->gerantUser ? $magasin->gerantUser->nom . ' ' . $magasin->gerantUser->prenom : null,
-                    ];
-                }),
+                'sites' => [
+                    'items' => $sites->map(function ($site) {
+                        return [
+                            'id' => $site->id,
+                            'nom' => $site->nom,
+                            'adresse' => $site->adresse,
+                            'latitude' => $site->latitude,
+                            'longitude' => $site->longitude,
+                            'longueur' => $site->longueur,
+                            'largeur' => $site->largeur,
+                            'gerant' => $site->gerantUser ? $site->gerantUser->nom . ' ' . $site->gerantUser->prenom : null,
+                        ];
+                    })->all(),
+                    'pagination' => $sites->links()->render(),
+                ],
+                'fermes' => [
+                    'items' => $fermes->map(function ($ferme) {
+                        return [
+                            'id' => $ferme->id,
+                            'nom' => $ferme->nom,
+                            'site' => $ferme->site ? $ferme->site->nom : null,
+                            'latitude' => $ferme->latitude,
+                            'longitude' => $ferme->longitude,
+                            'longueur' => $ferme->longueur,
+                            'largeur' => $ferme->largeur,
+                            'gerant' => $ferme->gerantUser ? $ferme->gerantUser->nom . ' ' . $ferme->gerantUser->prenom : null,
+                        ];
+                    })->all(),
+                    'pagination' => $fermes->links()->render(),
+                ],
+                'magasins' => [
+                    'items' => $magasins->map(function ($magasin) {
+                        return [
+                            'id' => $magasin->id,
+                            'nom' => $magasin->nom,
+                            'site' => $magasin->site ? $magasin->site->nom : null,
+                            'latitude' => $magasin->latitude,
+                            'longitude' => $magasin->longitude,
+                            'longueur' => $magasin->longueur,
+                            'largeur' => $magasin->largeur,
+                            'gerant' => $magasin->gerantUser ? $magasin->gerantUser->nom . ' ' . $magasin->gerantUser->prenom : null,
+                        ];
+                    })->all(),
+                    'pagination' => $magasins->links()->render(),
+                ],
+                'stats' => $stats,
             ]);
         }
 
-        return view('pages.admin.gestion-entites', compact('allSites', 'sites', 'fermes', 'magasins'));
+        return view('pages.admin.gestion-entites', compact('allSites', 'sites', 'fermes', 'magasins', 'stats'));
     }
 
     public function getAllLocations()

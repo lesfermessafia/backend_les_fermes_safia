@@ -13,7 +13,7 @@
             <h1 class="text-2xl font-bold text-[#305327]">Les Fermes Safia</h1>
             <p class="text-gray-600 mt-2">Système de Gestion</p>
             <div class="mt-4 flex justify-center">
-                <img src="{{ asset('images/toolou-safia-logo.png') }}" alt="Les Fermes Safia" class="h-20 w-auto" />
+                <img src="{{ url('img/toolou-safia-logo.png') }}" alt="Les Fermes Safia" class="h-20 w-auto" />
             </div>
         </div>
 

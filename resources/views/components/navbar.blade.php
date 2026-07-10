@@ -5,7 +5,7 @@
         <div class="flex justify-between items-center">
             <!-- Logo et Titre -->
             <div class="flex items-center gap-3">
-                <img src="{{ asset('images/toolou-safia-logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
+                <img src="{{ url('img/toolou-safia-logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
                 <h1 class="text-lg font-bold">{{ $title }} - Les Fermes Safia</h1>
             </div>
 

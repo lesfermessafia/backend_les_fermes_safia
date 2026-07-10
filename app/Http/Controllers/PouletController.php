@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Poulet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PouletController extends Controller
 {
     public function index()
     {
-        $poulets = Poulet::with('arrivages')->get();
+        $poulets = Poulet::with('arrivages')->get()->map(function ($poulet) {
+            $poulet->photo_url = $poulet->photo ? url('img/' . $poulet->photo) : null;
+            return $poulet;
+        });
         return response()->json($poulets);
     }
 
@@ -21,6 +25,7 @@ class PouletController extends Controller
             return response()->json(['error' => 'Poulet not found'], 404);
         }
         
+        $poulet->photo_url = $poulet->photo ? url('img/' . $poulet->photo) : null;
         return response()->json($poulet);
     }
 
@@ -36,8 +41,7 @@ class PouletController extends Controller
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imagePoulet'), $photoName);
-            $photoPath = 'imagePoulet/' . $photoName;
+            $photoPath = $photo->storeAs('imagePoulet', $photoName, 'public');
         }
 
         $poulet = Poulet::create([
@@ -47,6 +51,7 @@ class PouletController extends Controller
             'photo' => $photoPath,
         ]);
 
+        $poulet->photo_url = $poulet->photo ? url('img/' . $poulet->photo) : null;
         return response()->json([
             'message' => 'Poulet created successfully',
             'poulet' => $poulet
@@ -76,18 +81,18 @@ class PouletController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            if ($poulet->photo && file_exists(public_path($poulet->photo))) {
-                unlink(public_path($poulet->photo));
+            if ($poulet->photo && Storage::disk('public')->exists($poulet->photo)) {
+                Storage::disk('public')->delete($poulet->photo);
             }
 
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imagePoulet'), $photoName);
-            $updateData['photo'] = 'imagePoulet/' . $photoName;
+            $updateData['photo'] = $photo->storeAs('imagePoulet', $photoName, 'public');
         }
 
         $poulet->update($updateData);
 
+        $poulet->photo_url = $poulet->photo ? url('img/' . $poulet->photo) : null;
         return response()->json([
             'message' => 'Poulet updated successfully',
             'poulet' => $poulet
@@ -100,6 +105,10 @@ class PouletController extends Controller
         
         if (!$poulet) {
             return response()->json(['error' => 'Poulet not found'], 404);
+        }
+
+        if ($poulet->photo && Storage::disk('public')->exists($poulet->photo)) {
+            Storage::disk('public')->delete($poulet->photo);
         }
 
         $poulet->delete();

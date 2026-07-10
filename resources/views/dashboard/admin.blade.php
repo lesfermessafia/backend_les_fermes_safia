@@ -13,7 +13,7 @@
     <div class="container mx-auto px-4 py-12">
         <div class="mb-12 text-center">
             <div class="mb-6 flex justify-center">
-                <img src="{{ asset('images/toolou-safia-logo.png') }}" alt="Les Fermes Safia" class="h-32 w-auto" />
+                <img src="{{ url('img/toolou-safia-logo.png') }}" alt="Les Fermes Safia" class="h-32 w-auto" />
             </div>
             <h1 class="mb-3 text-4xl font-bold text-[#305327]">Système de Gestion Les Fermes Safia</h1>
             <p class="text-xl text-gray-600">Produits De Notre Terroir - Dashboard Admin</p>

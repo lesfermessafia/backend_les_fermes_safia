@@ -80,7 +80,7 @@
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm">
                                 @if($aliment->photo)
-                                    <img src="{{ asset($aliment->photo) }}" alt="{{ $aliment->nom }}" class="w-12 h-12 object-cover rounded">
+                                    <img src="{{ url('img/' . $aliment->photo) }}" alt="{{ $aliment->nom }}" class="w-12 h-12 object-cover rounded">
                                 @else
                                     -
                                 @endif
@@ -101,6 +101,16 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div id="pagination-aliments" class="mt-4">
+                {{ $aliments->links() }}
+            </div>
+
+            <div id="stats-aliments" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                    <p class="text-sm text-[#305327] font-medium">Total Aliments</p>
+                    <p class="text-2xl font-bold text-[#305327]">{{ $totalAliments }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -139,7 +149,7 @@
     </div>
 
     <script>
-        let aliments = @json($aliments);
+        let aliments = @json($aliments->items());
 
         function openModal() {
             document.getElementById('alimentModal').classList.remove('hidden');
@@ -173,7 +183,7 @@
 
                 const preview = document.getElementById('alimentPhotoPreview');
                 if (aliment.photo) {
-                    preview.src = '/' + aliment.photo;
+                    preview.src = '/img/' + aliment.photo;
                     preview.classList.remove('hidden');
                 } else {
                     preview.src = '';
@@ -222,7 +232,7 @@
             }
             tbody.innerHTML = items.map(a => `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="px-4 py-3 text-sm">${a.photo ? `<img src="/${escapeHtml(a.photo)}" alt="${escapeHtml(a.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
+                    <td class="px-4 py-3 text-sm">${a.photo ? `<img src="/img/${escapeHtml(a.photo)}" alt="${escapeHtml(a.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(a.code)}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(a.nom)}</td>
                     <td class="px-4 py-3 text-sm">
@@ -242,6 +252,14 @@
                 const data = await response.json();
                 aliments = data.aliments;
                 renderAliments(aliments);
+                const paginationContainer = document.getElementById('pagination-aliments');
+                if (paginationContainer && data.pagination !== undefined) {
+                    paginationContainer.innerHTML = data.pagination;
+                }
+                const statsTotal = document.querySelector('#stats-aliments p.text-2xl');
+                if (statsTotal && data.total !== undefined) {
+                    statsTotal.textContent = data.total;
+                }
             } catch (error) {
                 alert('Erreur lors du chargement des aliments: ' + error.message);
             }

@@ -9,7 +9,10 @@ class MatierePremiereController extends Controller
 {
     public function index()
     {
-        $matieres = MatierePremiere::all();
+        $matieres = MatierePremiere::all()->map(function ($matiere) {
+            $matiere->image_url = $matiere->image ? url('img/' . $matiere->image) : null;
+            return $matiere;
+        });
         return response()->json($matieres);
     }
 
@@ -21,6 +24,7 @@ class MatierePremiereController extends Controller
             return response()->json(['error' => 'Matiere premiere not found'], 404);
         }
         
+        $matiere->image_url = $matiere->image ? url('img/' . $matiere->image) : null;
         return response()->json($matiere);
     }
 
@@ -38,6 +42,7 @@ class MatierePremiereController extends Controller
             'unite' => $request->unite,
         ]);
 
+        $matiere->image_url = $matiere->image ? url('img/' . $matiere->image) : null;
         return response()->json([
             'message' => 'Matiere premiere created successfully',
             'matiere' => $matiere
@@ -71,6 +76,7 @@ class MatierePremiereController extends Controller
 
         $matiere->update($updateData);
 
+        $matiere->image_url = $matiere->image ? url('img/' . $matiere->image) : null;
         return response()->json([
             'message' => 'Matiere premiere updated successfully',
             'matiere' => $matiere

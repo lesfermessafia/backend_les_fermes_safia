@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Formule;
 use App\Models\MatierePremiere;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class FormuleWebController extends Controller
 {
@@ -43,11 +45,35 @@ class FormuleWebController extends Controller
             })->values();
         }
 
+        $totalFormules = $formules->count();
+        $totalComposants = $formules->sum(fn ($f) => count($f['composant']));
+        $avgComposants = $totalFormules > 0 ? round($totalComposants / $totalFormules, 2) : 0;
+
+        $page = $request->input('page', 1);
+        $perPage = 10;
+        $formules = new LengthAwarePaginator(
+            $formules->forPage($page, $perPage)->values(),
+            $formules->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $stats = [
+            'total' => $totalFormules,
+            'totalComposants' => $totalComposants,
+            'avgComposants' => $avgComposants,
+        ];
+
         if ($request->ajax()) {
-            return response()->json(['formules' => $formules]);
+            return response()->json([
+                'formules' => $formules->items(),
+                'pagination' => $formules->links()->render(),
+                'stats' => $stats,
+            ]);
         }
 
-        return view('pages.admin.gestion-formules', compact('formules', 'matieresPremieres'));
+        return view('pages.admin.gestion-formules', compact('formules', 'matieresPremieres', 'stats'));
     }
 
     public function store(Request $request)
@@ -64,8 +90,7 @@ class FormuleWebController extends Controller
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageFormule'), $photoName);
-            $photoPath = 'imageFormule/' . $photoName;
+            $photoPath = $photo->storeAs('imageFormule', $photoName, 'public');
         }
 
         Formule::create([
@@ -99,14 +124,13 @@ class FormuleWebController extends Controller
         ];
 
         if ($request->hasFile('photo')) {
-            if ($formule->photo && file_exists(public_path($formule->photo))) {
-                unlink(public_path($formule->photo));
+            if ($formule->photo && Storage::disk('public')->exists($formule->photo)) {
+                Storage::disk('public')->delete($formule->photo);
             }
 
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageFormule'), $photoName);
-            $updateData['photo'] = 'imageFormule/' . $photoName;
+            $updateData['photo'] = $photo->storeAs('imageFormule', $photoName, 'public');
         }
 
         $formule->update($updateData);
@@ -122,8 +146,8 @@ class FormuleWebController extends Controller
             return redirect()->back()->with('error', 'Formule non trouvée');
         }
 
-        if ($formule->photo && file_exists(public_path($formule->photo))) {
-            unlink(public_path($formule->photo));
+        if ($formule->photo && Storage::disk('public')->exists($formule->photo)) {
+            Storage::disk('public')->delete($formule->photo);
         }
 
         $formule->delete();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Aliment;
 
 class AlimentWebController extends Controller
@@ -18,13 +19,18 @@ class AlimentWebController extends Controller
             });
         }
 
-        $aliments = $query->orderBy('id', 'desc')->get();
+        $totalAliments = $query->count();
+        $aliments = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         if ($request->ajax()) {
-            return response()->json(['aliments' => $aliments]);
+            return response()->json([
+                'aliments' => $aliments->items(),
+                'pagination' => $aliments->links()->render(),
+                'total' => $totalAliments,
+            ]);
         }
 
-        return view('pages.admin.gestion-aliments', compact('aliments'));
+        return view('pages.admin.gestion-aliments', compact('aliments', 'totalAliments'));
     }
 
     public function store(Request $request)
@@ -38,8 +44,7 @@ class AlimentWebController extends Controller
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageAliment'), $photoName);
-            $photoPath = 'imageAliment/' . $photoName;
+            $photoPath = $photo->storeAs('imageAliment', $photoName, 'public');
         }
 
         Aliment::create([
@@ -69,14 +74,13 @@ class AlimentWebController extends Controller
         ];
 
         if ($request->hasFile('photo')) {
-            if ($aliment->photo && file_exists(public_path($aliment->photo))) {
-                unlink(public_path($aliment->photo));
+            if ($aliment->photo && Storage::disk('public')->exists($aliment->photo)) {
+                Storage::disk('public')->delete($aliment->photo);
             }
 
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageAliment'), $photoName);
-            $updateData['photo'] = 'imageAliment/' . $photoName;
+            $updateData['photo'] = $photo->storeAs('imageAliment', $photoName, 'public');
         }
 
         $aliment->update($updateData);

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion Utilisateurs - Les Fermes Safia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 </head>
@@ -109,7 +110,7 @@
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm">
                                 @if($user->photo_profil)
-                                    <img src="{{ asset($user->photo_profil) }}" alt="{{ $user->nom }}" class="w-10 h-10 object-cover rounded-full">
+                                    <img src="{{ url('img/' . $user->photo_profil) }}" alt="{{ $user->nom }}" class="w-10 h-10 object-cover rounded-full">
                                 @else
                                     <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">👤</div>
                                 @endif
@@ -159,6 +160,24 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="mt-4">
+                {{ $users->links() }}
+            </div>
+
+            <!-- Statistiques utilisateurs -->
+            <div class="mt-8 border-t pt-6">
+                <h3 class="text-lg font-semibold text-[#305327] mb-4">Statistiques des utilisateurs</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                    <div class="flex flex-col items-center">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2 text-center">Répartition par rôle</h4>
+                        <canvas id="roleChart" class="max-h-48 w-full"></canvas>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2 text-center">Répartition par statut</h4>
+                        <canvas id="statusChart" class="max-h-48 w-full"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -225,6 +244,59 @@
     </div>
 
     <script>
+        const roleStats = @json($roleStats);
+        const statusStats = @json($statusStats);
+
+        function initUserCharts() {
+            const roleCtx = document.getElementById('roleChart');
+            const statusCtx = document.getElementById('statusChart');
+
+            if (!roleCtx || !statusCtx) return;
+
+            const roleLabels = Object.keys(roleStats).map(r => r.charAt(0).toUpperCase() + r.slice(1));
+            const roleData = Object.values(roleStats);
+            const statusLabels = Object.keys(statusStats).map(s => s.charAt(0).toUpperCase() + s.slice(1));
+            const statusData = Object.values(statusStats);
+
+            new Chart(roleCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: roleLabels,
+                    datasets: [{
+                        data: roleData,
+                        backgroundColor: ['#305327', '#008d36', '#9ca3af'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: ['#008d36', '#dc2626'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
         function showAjaxError(message) {
             const errorDiv = document.getElementById('ajaxError');
             const errorMessage = document.getElementById('ajaxErrorMessage');
@@ -308,7 +380,7 @@
 
                 const preview = document.getElementById('photoPreview');
                 if (user.photo_profil) {
-                    preview.src = '/' + user.photo_profil;
+                    preview.src = '/img/' + user.photo_profil;
                     preview.classList.remove('hidden');
                 } else {
                     preview.src = '';
@@ -343,6 +415,8 @@
                 }
             }
         }
+
+        document.addEventListener('DOMContentLoaded', initUserCharts);
 
         async function deleteUser(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {

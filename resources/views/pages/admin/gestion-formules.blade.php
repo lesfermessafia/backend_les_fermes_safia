@@ -80,7 +80,7 @@
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm">
                                 @if($formule['photo'])
-                                    <img src="{{ asset($formule['photo']) }}" alt="{{ $formule['nom'] }}" class="w-12 h-12 object-cover rounded">
+                                    <img src="{{ url('img/' . $formule['photo']) }}" alt="{{ $formule['nom'] }}" class="w-12 h-12 object-cover rounded">
                                 @else
                                     -
                                 @endif
@@ -107,6 +107,24 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div id="pagination-formules" class="mt-4">
+                {{ $formules->links() }}
+            </div>
+
+            <div id="stats-formules" class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                    <p class="text-sm text-[#305327] font-medium">Total Formules</p>
+                    <p class="text-2xl font-bold text-[#305327]" id="stats-formules-total">{{ $stats['total'] }}</p>
+                </div>
+                <div class="bg-[#008d36]/10 rounded-lg p-4 border border-[#008d36]/20">
+                    <p class="text-sm text-[#008d36] font-medium">Total Composants</p>
+                    <p class="text-2xl font-bold text-[#008d36]" id="stats-formules-composants">{{ $stats['totalComposants'] }}</p>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                    <p class="text-sm text-blue-700 font-medium">Moyenne composants / formule</p>
+                    <p class="text-2xl font-bold text-blue-700" id="stats-formules-moyenne">{{ $stats['avgComposants'] }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -153,7 +171,7 @@
     </div>
 
     <script>
-        let formules = @json($formules);
+        let formules = @json($formules->items());
         const matieresPremieres = @json($matieresPremieres);
         let composantIndex = 0;
 
@@ -232,7 +250,7 @@
 
                 const preview = document.getElementById('formulePhotoPreview');
                 if (formule.photo) {
-                    preview.src = '/' + formule.photo;
+                    preview.src = '/img/' + formule.photo;
                     preview.classList.remove('hidden');
                 } else {
                     preview.src = '';
@@ -284,7 +302,7 @@
             }
             tbody.innerHTML = items.map(f => `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="px-4 py-3 text-sm">${f.photo ? `<img src="/${escapeHtml(f.photo)}" alt="${escapeHtml(f.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
+                    <td class="px-4 py-3 text-sm">${f.photo ? `<img src="/img/${escapeHtml(f.photo)}" alt="${escapeHtml(f.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(f.nom)}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">
                         <ul class="list-disc list-inside">
@@ -308,6 +326,18 @@
                 const data = await response.json();
                 formules = data.formules;
                 renderFormules(formules);
+                const paginationContainer = document.getElementById('pagination-formules');
+                if (paginationContainer && data.pagination !== undefined) {
+                    paginationContainer.innerHTML = data.pagination;
+                }
+                if (data.stats) {
+                    const totalEl = document.getElementById('stats-formules-total');
+                    const composantsEl = document.getElementById('stats-formules-composants');
+                    const moyenneEl = document.getElementById('stats-formules-moyenne');
+                    if (totalEl) totalEl.textContent = data.stats.total;
+                    if (composantsEl) composantsEl.textContent = data.stats.totalComposants;
+                    if (moyenneEl) moyenneEl.textContent = data.stats.avgComposants;
+                }
             } catch (error) {
                 alert('Erreur lors du chargement des formules: ' + error.message);
             }

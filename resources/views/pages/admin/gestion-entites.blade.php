@@ -75,13 +75,6 @@
             <p id="ajaxSuccessMessage"></p>
         </div>
 
-        <!-- Carte de vue d'ensemble -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold text-[#305327] mb-4">Carte des emplacements</h2>
-            <div id="map-overview"></div>
-            <p class="text-sm text-gray-500 mt-2">Cette carte affiche toutes les fermes et magasins avec leurs localisations</p>
-        </div>
-
         <!-- Onglets pour les différentes entités -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-2xl font-bold text-[#305327] mb-6">Gestion des Entités</h2>
@@ -161,6 +154,9 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="pagination-sites" class="mt-4">
+                    {{ $sites->links() }}
+                </div>
             </div>
 
             <!-- Contenu Fermes -->
@@ -234,6 +230,9 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                <div id="pagination-fermes" class="mt-4">
+                    {{ $fermes->links() }}
                 </div>
             </div>
 
@@ -309,7 +308,57 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="pagination-magasins" class="mt-4">
+                    {{ $magasins->links() }}
+                </div>
             </div>
+
+            <div id="stats-entites" class="mt-8 border-t pt-6">
+                <h3 class="text-lg font-semibold text-[#305327] mb-4">Statistiques des entités</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                        <p class="text-sm text-[#305327] font-medium">Total Sites</p>
+                        <p class="text-2xl font-bold text-[#305327]" id="stats-total-sites">{{ $stats['totalSites'] }}</p>
+                    </div>
+                    <div class="bg-[#008d36]/10 rounded-lg p-4 border border-[#008d36]/20">
+                        <p class="text-sm text-[#008d36] font-medium">Total Fermes</p>
+                        <p class="text-2xl font-bold text-[#008d36]" id="stats-total-fermes">{{ $stats['totalFermes'] }}</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <p class="text-sm text-blue-700 font-medium">Total Magasins</p>
+                        <p class="text-2xl font-bold text-blue-700" id="stats-total-magasins">{{ $stats['totalMagasins'] }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Fermes par site</h4>
+                        <ul class="space-y-1 text-sm" id="stats-fermes-by-site">
+                            @forelse ($stats['fermesBySite'] as $site => $count)
+                            <li class="flex justify-between"><span>{{ $site }}</span><span class="font-semibold">{{ $count }}</span></li>
+                            @empty
+                            <li class="text-gray-500">Aucune donnée.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Magasins par site</h4>
+                        <ul class="space-y-1 text-sm" id="stats-magasins-by-site">
+                            @forelse ($stats['magasinsBySite'] as $site => $count)
+                            <li class="flex justify-between"><span>{{ $site }}</span><span class="font-semibold">{{ $count }}</span></li>
+                            @empty
+                            <li class="text-gray-500">Aucune donnée.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carte de vue d'ensemble -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-[#305327] mb-4">Carte des emplacements</h2>
+            <div id="map-overview"></div>
+            <p class="text-sm text-gray-500 mt-2">Cette carte affiche toutes les fermes et magasins avec leurs localisations</p>
         </div>
     </div>
 
@@ -641,10 +690,55 @@
             }).join('');
         }
 
+        function renderStats(stats) {
+            if (!stats) return;
+
+            const totalSites = document.getElementById('stats-total-sites');
+            const totalFermes = document.getElementById('stats-total-fermes');
+            const totalMagasins = document.getElementById('stats-total-magasins');
+            const fermesBySite = document.getElementById('stats-fermes-by-site');
+            const magasinsBySite = document.getElementById('stats-magasins-by-site');
+
+            if (totalSites) totalSites.textContent = stats.totalSites !== undefined ? stats.totalSites : 0;
+            if (totalFermes) totalFermes.textContent = stats.totalFermes !== undefined ? stats.totalFermes : 0;
+            if (totalMagasins) totalMagasins.textContent = stats.totalMagasins !== undefined ? stats.totalMagasins : 0;
+
+            if (fermesBySite) {
+                fermesBySite.innerHTML = stats.fermesBySite && Object.keys(stats.fermesBySite).length
+                    ? Object.entries(stats.fermesBySite).map(([site, count]) => `<li class="flex justify-between"><span>${escapeHtml(site)}</span><span class="font-semibold">${escapeHtml(String(count))}</span></li>`).join('')
+                    : '<li class="text-gray-500">Aucune donnée.</li>';
+            }
+            if (magasinsBySite) {
+                magasinsBySite.innerHTML = stats.magasinsBySite && Object.keys(stats.magasinsBySite).length
+                    ? Object.entries(stats.magasinsBySite).map(([site, count]) => `<li class="flex justify-between"><span>${escapeHtml(site)}</span><span class="font-semibold">${escapeHtml(String(count))}</span></li>`).join('')
+                    : '<li class="text-gray-500">Aucune donnée.</li>';
+            }
+        }
+
         function updateTables(data) {
-            document.querySelector('#content-sites tbody').innerHTML = renderEntityRows(data.sites, 'sites');
-            document.querySelector('#content-fermes tbody').innerHTML = renderEntityRows(data.fermes, 'fermes');
-            document.querySelector('#content-magasins tbody').innerHTML = renderEntityRows(data.magasins, 'magasins');
+            const sites = data.sites.items || data.sites || [];
+            const fermes = data.fermes.items || data.fermes || [];
+            const magasins = data.magasins.items || data.magasins || [];
+
+            document.querySelector('#content-sites tbody').innerHTML = renderEntityRows(sites, 'sites');
+            document.querySelector('#content-fermes tbody').innerHTML = renderEntityRows(fermes, 'fermes');
+            document.querySelector('#content-magasins tbody').innerHTML = renderEntityRows(magasins, 'magasins');
+
+            const paginationSites = document.getElementById('pagination-sites');
+            const paginationFermes = document.getElementById('pagination-fermes');
+            const paginationMagasins = document.getElementById('pagination-magasins');
+
+            if (paginationSites && data.sites.pagination !== undefined) {
+                paginationSites.innerHTML = data.sites.pagination;
+            }
+            if (paginationFermes && data.fermes.pagination !== undefined) {
+                paginationFermes.innerHTML = data.fermes.pagination;
+            }
+            if (paginationMagasins && data.magasins.pagination !== undefined) {
+                paginationMagasins.innerHTML = data.magasins.pagination;
+            }
+
+            renderStats(data.stats);
         }
 
         async function loadEntities(url) {

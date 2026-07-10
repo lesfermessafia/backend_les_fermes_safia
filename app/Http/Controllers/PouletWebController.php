@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Poulet;
 
 class PouletWebController extends Controller
@@ -19,13 +20,26 @@ class PouletWebController extends Controller
             });
         }
 
-        $poulets = $query->orderBy('id', 'desc')->get();
+        $totalPoulets = $query->count();
+        $poulets = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+
+        $statsByRace = (clone $query)
+            ->selectRaw('race, COUNT(*) as total')
+            ->groupBy('race')
+            ->orderBy('total', 'desc')
+            ->pluck('total', 'race')
+            ->toArray();
 
         if ($request->ajax()) {
-            return response()->json(['poulets' => $poulets]);
+            return response()->json([
+                'poulets' => $poulets->items(),
+                'pagination' => $poulets->links()->render(),
+                'total' => $totalPoulets,
+                'byRace' => $statsByRace,
+            ]);
         }
 
-        return view('pages.admin.gestion-poulets', compact('poulets'));
+        return view('pages.admin.gestion-poulets', compact('poulets', 'totalPoulets', 'statsByRace'));
     }
 
     public function store(Request $request)
@@ -40,8 +54,7 @@ class PouletWebController extends Controller
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imagePoulet'), $photoName);
-            $photoPath = 'imagePoulet/' . $photoName;
+            $photoPath = $photo->storeAs('imagePoulet', $photoName, 'public');
         }
 
         Poulet::create([
@@ -74,14 +87,13 @@ class PouletWebController extends Controller
         ];
 
         if ($request->hasFile('photo')) {
-            if ($poulet->photo && file_exists(public_path($poulet->photo))) {
-                unlink(public_path($poulet->photo));
+            if ($poulet->photo && Storage::disk('public')->exists($poulet->photo)) {
+                Storage::disk('public')->delete($poulet->photo);
             }
 
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imagePoulet'), $photoName);
-            $updateData['photo'] = 'imagePoulet/' . $photoName;
+            $updateData['photo'] = $photo->storeAs('imagePoulet', $photoName, 'public');
         }
 
         $poulet->update($updateData);
@@ -97,8 +109,8 @@ class PouletWebController extends Controller
             return redirect()->back()->with('error', 'Poulet non trouvé');
         }
 
-        if ($poulet->photo && file_exists(public_path($poulet->photo))) {
-            unlink(public_path($poulet->photo));
+        if ($poulet->photo && Storage::disk('public')->exists($poulet->photo)) {
+            Storage::disk('public')->delete($poulet->photo);
         }
 
         $poulet->delete();

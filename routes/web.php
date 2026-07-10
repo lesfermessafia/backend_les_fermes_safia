@@ -8,6 +8,18 @@ use App\Http\Controllers\MatierePremiereWebController;
 use App\Http\Controllers\AlimentWebController;
 use App\Http\Controllers\PouletWebController;
 use App\Http\Controllers\FormuleWebController;
+use Illuminate\Support\Facades\Storage;
+
+// Route pour servir les images uploadées
+Route::get('/img/{filename}', function ($filename) {
+    $path = storage_path('app/public/' . $filename);
+    
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    
+    return response()->file($path);
+})->where('filename', '.*');
 
 Route::get('/', function () {
     return redirect()->route('login');

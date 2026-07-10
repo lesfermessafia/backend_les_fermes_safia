@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\MatierePremiere;
 
 class MatierePremiereWebController extends Controller
@@ -19,13 +20,26 @@ class MatierePremiereWebController extends Controller
             });
         }
 
-        $matieres = $query->orderBy('id', 'desc')->get();
+        $totalMatieres = $query->count();
+        $matieres = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+
+        $statsByUnite = (clone $query)
+            ->selectRaw('unite, COUNT(*) as total')
+            ->groupBy('unite')
+            ->orderBy('total', 'desc')
+            ->pluck('total', 'unite')
+            ->toArray();
 
         if ($request->ajax()) {
-            return response()->json(['matieres' => $matieres]);
+            return response()->json([
+                'matieres' => $matieres->items(),
+                'pagination' => $matieres->links()->render(),
+                'total' => $totalMatieres,
+                'byUnite' => $statsByUnite,
+            ]);
         }
 
-        return view('pages.admin.gestion-matieres-premieres', compact('matieres'));
+        return view('pages.admin.gestion-matieres-premieres', compact('matieres', 'totalMatieres', 'statsByUnite'));
     }
 
     public function store(Request $request)
@@ -40,8 +54,7 @@ class MatierePremiereWebController extends Controller
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('imageMatierePremiere'), $imageName);
-            $imagePath = 'imageMatierePremiere/' . $imageName;
+            $imagePath = $image->storeAs('imageMatierePremiere', $imageName, 'public');
         }
 
         $matiere = MatierePremiere::create([
@@ -73,14 +86,13 @@ class MatierePremiereWebController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            if ($matiere->image && file_exists(public_path($matiere->image))) {
-                unlink(public_path($matiere->image));
+            if ($matiere->image && Storage::disk('public')->exists($matiere->image)) {
+                Storage::disk('public')->delete($matiere->image);
             }
 
             $image = $request->file('image');
             $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('imageMatierePremiere'), $imageName);
-            $updateData['image'] = 'imageMatierePremiere/' . $imageName;
+            $updateData['image'] = $image->storeAs('imageMatierePremiere', $imageName, 'public');
         }
 
         $matiere->update($updateData);
@@ -94,6 +106,10 @@ class MatierePremiereWebController extends Controller
         
         if (!$matiere) {
             return redirect()->back()->with('error', 'Matière première non trouvée');
+        }
+
+        if ($matiere->image && Storage::disk('public')->exists($matiere->image)) {
+            Storage::disk('public')->delete($matiere->image);
         }
 
         $matiere->delete();

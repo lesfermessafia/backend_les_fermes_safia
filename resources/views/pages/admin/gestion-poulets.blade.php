@@ -81,7 +81,7 @@
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm">
                                 @if($poulet->photo)
-                                    <img src="{{ asset($poulet->photo) }}" alt="{{ $poulet->nom }}" class="w-12 h-12 object-cover rounded">
+                                    <img src="{{ url('img/' . $poulet->photo) }}" alt="{{ $poulet->nom }}" class="w-12 h-12 object-cover rounded">
                                 @else
                                     -
                                 @endif
@@ -103,6 +103,22 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div id="pagination-poulets" class="mt-4">
+                {{ $poulets->links() }}
+            </div>
+
+            <div id="stats-poulets" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                    <p class="text-sm text-[#305327] font-medium">Total Poulets</p>
+                    <p class="text-2xl font-bold text-[#305327]">{{ $totalPoulets }}</p>
+                </div>
+                @foreach ($statsByRace as $race => $count)
+                <div class="bg-[#008d36]/10 rounded-lg p-4 border border-[#008d36]/20">
+                    <p class="text-sm text-[#008d36] font-medium">Race : {{ $race }}</p>
+                    <p class="text-2xl font-bold text-[#008d36]">{{ $count }}</p>
+                </div>
+                @endforeach
             </div>
         </div>
     </div>
@@ -146,7 +162,7 @@
     </div>
 
     <script>
-        let poulets = @json($poulets);
+        let poulets = @json($poulets->items());
 
         function openModal() {
             document.getElementById('pouletModal').classList.remove('hidden');
@@ -182,7 +198,7 @@
 
                 const preview = document.getElementById('pouletPhotoPreview');
                 if (poulet.photo) {
-                    preview.src = '/' + poulet.photo;
+                    preview.src = '/img/' + poulet.photo;
                     preview.classList.remove('hidden');
                 } else {
                     preview.src = '';
@@ -231,7 +247,7 @@
             }
             tbody.innerHTML = items.map(p => `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="px-4 py-3 text-sm">${p.photo ? `<img src="/${escapeHtml(p.photo)}" alt="${escapeHtml(p.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
+                    <td class="px-4 py-3 text-sm">${p.photo ? `<img src="/img/${escapeHtml(p.photo)}" alt="${escapeHtml(p.nom)}" class="w-12 h-12 object-cover rounded">` : '-'}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(p.code)}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(p.nom)}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(p.race)}</td>
@@ -243,6 +259,28 @@
             `).join('');
         }
 
+        function renderPouletStats(total, byRace) {
+            const container = document.getElementById('stats-poulets');
+            if (!container) return;
+            let html = `
+                <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
+                    <p class="text-sm text-[#305327] font-medium">Total Poulets</p>
+                    <p class="text-2xl font-bold text-[#305327]">${escapeHtml(String(total))}</p>
+                </div>
+            `;
+            if (byRace) {
+                Object.entries(byRace).forEach(([race, count]) => {
+                    html += `
+                        <div class="bg-[#008d36]/10 rounded-lg p-4 border border-[#008d36]/20">
+                            <p class="text-sm text-[#008d36] font-medium">Race : ${escapeHtml(race)}</p>
+                            <p class="text-2xl font-bold text-[#008d36]">${escapeHtml(String(count))}</p>
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        }
+
         async function loadPoulets(url) {
             try {
                 const response = await fetch(url, {
@@ -252,6 +290,11 @@
                 const data = await response.json();
                 poulets = data.poulets;
                 renderPoulets(poulets);
+                const paginationContainer = document.getElementById('pagination-poulets');
+                if (paginationContainer && data.pagination !== undefined) {
+                    paginationContainer.innerHTML = data.pagination;
+                }
+                renderPouletStats(data.total !== undefined ? data.total : 0, data.byRace);
             } catch (error) {
                 alert('Erreur lors du chargement des poulets: ' + error.message);
             }

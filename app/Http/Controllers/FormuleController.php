@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Formule;
 use App\Models\MatierePremiere;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class FormuleController extends Controller
 {
@@ -31,6 +32,7 @@ class FormuleController extends Controller
                 'id' => $formule->id,
                 'nom' => $formule->nom,
                 'photo' => $formule->photo,
+                'photo_url' => $formule->photo ? url('img/' . $formule->photo) : null,
                 'composant' => $composantsAvecInfos,
                 'created_at' => $formule->created_at,
                 'updated_at' => $formule->updated_at,
@@ -66,6 +68,7 @@ class FormuleController extends Controller
             'id' => $formule->id,
             'nom' => $formule->nom,
             'photo' => $formule->photo,
+            'photo_url' => $formule->photo ? url('img/' . $formule->photo) : null,
             'composant' => $composantsAvecInfos,
             'created_at' => $formule->created_at,
             'updated_at' => $formule->updated_at,
@@ -86,8 +89,7 @@ class FormuleController extends Controller
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageFormule'), $photoName);
-            $photoPath = 'imageFormule/' . $photoName;
+            $photoPath = $photo->storeAs('imageFormule', $photoName, 'public');
         }
 
         $formule = Formule::create([
@@ -96,6 +98,7 @@ class FormuleController extends Controller
             'composant' => $request->composant,
         ]);
 
+        $formule->photo_url = $formule->photo ? url('img/' . $formule->photo) : null;
         return response()->json([
             'message' => 'Formule created successfully',
             'formule' => $formule
@@ -125,18 +128,18 @@ class FormuleController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            if ($formule->photo && file_exists(public_path($formule->photo))) {
-                unlink(public_path($formule->photo));
+            if ($formule->photo && Storage::disk('public')->exists($formule->photo)) {
+                Storage::disk('public')->delete($formule->photo);
             }
 
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->move(public_path('imageFormule'), $photoName);
-            $updateData['photo'] = 'imageFormule/' . $photoName;
+            $updateData['photo'] = $photo->storeAs('imageFormule', $photoName, 'public');
         }
 
         $formule->update($updateData);
 
+        $formule->photo_url = $formule->photo ? url('img/' . $formule->photo) : null;
         return response()->json([
             'message' => 'Formule updated successfully',
             'formule' => $formule
@@ -149,6 +152,10 @@ class FormuleController extends Controller
         
         if (!$formule) {
             return response()->json(['error' => 'Formule not found'], 404);
+        }
+
+        if ($formule->photo && Storage::disk('public')->exists($formule->photo)) {
+            Storage::disk('public')->delete($formule->photo);
         }
 
         $formule->delete();
