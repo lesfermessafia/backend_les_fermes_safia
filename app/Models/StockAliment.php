@@ -11,6 +11,7 @@ class StockAliment extends Model
         'code_stock',
         'formule_id',
         'quantite_fabriquer',
+        'quantite_utiliser',
         'status',
     ];
 

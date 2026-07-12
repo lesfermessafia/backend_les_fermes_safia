@@ -22,7 +22,7 @@ class MouvementStock extends Model
         return $this->belongsTo(Magasin::class, 'magasin_id');
     }
 
-    public function matierePremiere()
+    public function matiere()
     {
         return $this->belongsTo(MatierePremiere::class, 'matiere_id');
     }

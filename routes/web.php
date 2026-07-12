@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EntiteController;
 use App\Http\Controllers\MatierePremiereWebController;
+use App\Http\Controllers\StockMatierePremiereWebController;
 use App\Http\Controllers\AlimentWebController;
 use App\Http\Controllers\PouletWebController;
 use App\Http\Controllers\FormuleWebController;
@@ -76,6 +77,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}', [EntiteController::class, 'showMagasin'])->name('show');
             Route::put('/{id}', [EntiteController::class, 'updateMagasin'])->name('update');
             Route::delete('/{id}', [EntiteController::class, 'destroyMagasin'])->name('destroy');
+            Route::get('/all', [EntiteController::class, 'getAllMagasins'])->name('all');
         });
     });
 
@@ -85,6 +87,24 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [MatierePremiereWebController::class, 'store'])->name('store');
         Route::put('/{id}', [MatierePremiereWebController::class, 'update'])->name('update');
         Route::delete('/{id}', [MatierePremiereWebController::class, 'destroy'])->name('destroy');
+        Route::get('/all', [MatierePremiereWebController::class, 'getAll'])->name('all');
+        
+        // Routes de gestion du stock
+        Route::get('/stock', [StockMatierePremiereWebController::class, 'index'])->name('stock.index');
+        Route::get('/stock/{id}/details', [StockMatierePremiereWebController::class, 'details'])->name('stock.details');
+        Route::get('/stock/matiere/{id}/details', [StockMatierePremiereWebController::class, 'matiereDetails'])->name('stock.matiereDetails');
+        Route::get('/stock/matiere/{matiereId}/magasins', [StockMatierePremiereWebController::class, 'getMagasinsForMatiere'])->name('stock.getMagasinsForMatiere');
+        Route::get('/stock/matiere/{matiereId}/magasin/{magasinId}/lots', [StockMatierePremiereWebController::class, 'getLotsForMatiereMagasin'])->name('stock.getLotsForMatiereMagasin');
+        Route::post('/stock/mouvement', [StockMatierePremiereWebController::class, 'mouvement'])->name('stock.mouvement');
+        Route::get('/stock/mouvement/{id}/details', [StockMatierePremiereWebController::class, 'mouvementDetails'])->name('stock.mouvementDetails');
+        Route::post('/stock/lot', [StockMatierePremiereWebController::class, 'storeLot'])->name('stock.storeLot');
+        Route::get('/stock/historique', [StockMatierePremiereWebController::class, 'historique'])->name('stock.historique');
+        Route::get('/stock/lots', [StockMatierePremiereWebController::class, 'getAllLots'])->name('stock.getAllLots');
+        Route::get('/stock/lot/{id}/details', [StockMatierePremiereWebController::class, 'lotDetails'])->name('stock.lotDetails');
+        Route::delete('/stock/lot/{id}', [StockMatierePremiereWebController::class, 'deleteLot'])->name('stock.deleteLot');
+        Route::post('/stock/matiere/delete', [StockMatierePremiereWebController::class, 'deleteMatiereFromLot'])->name('stock.deleteMatiereFromLot');
+        Route::post('/stock/matiere/update', [StockMatierePremiereWebController::class, 'updateMatiereInLot'])->name('stock.updateMatiereInLot');
+        Route::get('/stock/statistiques', [StockMatierePremiereWebController::class, 'statistiques'])->name('stock.statistiques');
     });
 
     // Routes de gestion des aliments (Admin uniquement)
@@ -93,6 +113,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [AlimentWebController::class, 'store'])->name('store');
         Route::put('/{id}', [AlimentWebController::class, 'update'])->name('update');
         Route::delete('/{id}', [AlimentWebController::class, 'destroy'])->name('destroy');
+        
+        // Routes de gestion des stocks d'aliments
+        Route::post('/stock', [AlimentWebController::class, 'storeStock'])->name('stock.store');
+        Route::put('/stock/{id}', [AlimentWebController::class, 'updateStock'])->name('stock.update');
+        Route::delete('/stock/{id}', [AlimentWebController::class, 'destroyStock'])->name('stock.destroy');
+        Route::post('/stock/mouvement', [AlimentWebController::class, 'mouvementStock'])->name('stock.mouvement');
+        Route::get('/stock/{id}/details', [AlimentWebController::class, 'stockDetails'])->name('stock.details');
     });
 
     // Routes de gestion des poulets (Admin uniquement)

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\MatierePremiere;
+use App\Models\Magasin;
+use App\Models\Lot;
 
 class MatierePremiereWebController extends Controller
 {
@@ -39,7 +41,11 @@ class MatierePremiereWebController extends Controller
             ]);
         }
 
-        return view('pages.admin.gestion-matieres-premieres', compact('matieres', 'totalMatieres', 'statsByUnite'));
+        $magasins = Magasin::all();
+        $lots = Lot::all();
+        $allMatieres = MatierePremiere::all();
+
+        return view('pages.admin.gestion-matieres-premieres', compact('matieres', 'totalMatieres', 'statsByUnite', 'magasins', 'lots', 'allMatieres'));
     }
 
     public function store(Request $request)
@@ -48,6 +54,7 @@ class MatierePremiereWebController extends Controller
             'nom' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'unite' => 'required|string',
+            'seuil_alerte' => 'nullable|numeric|min:0',
         ]);
 
         $imagePath = null;
@@ -61,6 +68,7 @@ class MatierePremiereWebController extends Controller
             'nom' => $request->nom,
             'image' => $imagePath,
             'unite' => $request->unite,
+            'seuil_alerte' => $request->filled('seuil_alerte') ? $request->seuil_alerte : 10,
         ]);
 
         return redirect()->back()->with('success', 'Matière première créée avec succès');
@@ -78,11 +86,13 @@ class MatierePremiereWebController extends Controller
             'nom' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'unite' => 'required|string',
+            'seuil_alerte' => 'nullable|numeric|min:0',
         ]);
 
         $updateData = [
             'nom' => $request->nom,
             'unite' => $request->unite,
+            'seuil_alerte' => $request->filled('seuil_alerte') ? $request->seuil_alerte : 10,
         ];
 
         if ($request->hasFile('image')) {
@@ -115,5 +125,11 @@ class MatierePremiereWebController extends Controller
         $matiere->delete();
 
         return redirect()->back()->with('success', 'Matière première supprimée avec succès');
+    }
+
+    public function getAll()
+    {
+        $matieres = MatierePremiere::select('id', 'nom', 'code', 'unite')->get();
+        return response()->json($matieres);
     }
 }

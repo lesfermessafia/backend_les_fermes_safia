@@ -1,3 +1,13 @@
+@auth
+    @if(auth()->user()->role === 'admin')
+        <script>window.location.href = "{{ route('admin.dashboard') }}";</script>
+    @elseif(auth()->user()->role === 'comptable')
+        <script>window.location.href = "{{ route('comptable.dashboard') }}";</script>
+    @elseif(auth()->user()->role === 'superviseur')
+        <script>window.location.href = "{{ route('superviseur.dashboard') }}";</script>
+    @endif
+@endauth
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>

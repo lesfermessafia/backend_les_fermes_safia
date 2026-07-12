@@ -72,6 +72,7 @@
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Photo</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Nom</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Unité</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Actions</th>
                         </tr>
                     </thead>
@@ -87,14 +88,23 @@
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $aliment->code }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $aliment->nom }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $aliment->unite ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm">
-                                <button onclick="editAliment({{ $aliment->id }})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
-                                <button onclick="deleteAliment({{ $aliment->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
+                                <button onclick="editAliment({{ $aliment->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteAliment({{ $aliment->id }})" class="text-red-600 hover:text-red-800" title="Supprimer">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
                                 Aucun aliment ne correspond aux critères sélectionnés.
                             </td>
                         </tr>
@@ -111,6 +121,208 @@
                     <p class="text-sm text-[#305327] font-medium">Total Aliments</p>
                     <p class="text-2xl font-bold text-[#305327]">{{ $totalAliments }}</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Section Gestion des Stocks d'Aliments -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-[#305327]">Stocks d'Aliments</h2>
+                    <button onclick="openStockModal()" class="bg-[#008d36] text-white px-4 py-2 rounded-lg hover:bg-[#305327] transition duration-200">
+                        + Nouveau Stock
+                    </button>
+                </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code Stock</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Aliment</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Formule</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité Fabriquée</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité Utilisée</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Disponible</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($stockAliments as $stock)
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->code_stock }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->aliment->nom }} ({{ $stock->aliment->code }})</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->formule->nom ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->quantite_fabriquer }} {{ $stock->aliment->unite ?? '' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->quantite_utiliser }} {{ $stock->aliment->unite ?? '' }}</td>
+                            <td class="px-4 py-3 text-sm font-medium {{ ($stock->quantite_fabriquer - $stock->quantite_utiliser) < 10 ? 'text-red-600' : 'text-green-600' }}">
+                                {{ $stock->quantite_fabriquer - $stock->quantite_utiliser }} {{ $stock->aliment->unite ?? '' }}
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 rounded-full text-xs 
+                                    {{ $stock->status === 'en attente' ? 'bg-yellow-100 text-yellow-800' : 
+                                       ($stock->status === 'en production' ? 'bg-blue-100 text-blue-800' : 
+                                       ($stock->status === 'production terminer' ? 'bg-green-100 text-green-800' : 
+                                       ($stock->status === 'annule' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))) }}">
+                                    {{ $stock->status ?? 'en attente' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <button onclick="editStock({{ $stock->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="openMouvementStockModal({{ $stock->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Mouvement">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="viewStockDetails({{ $stock->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Voir">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteStock({{ $stock->id }})" class="text-red-600 hover:text-red-800" title="Supprimer">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                Aucun stock d'aliment disponible.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            </div>
+
+            <!-- Section Stocks Terminés -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-[#305327] mb-4">Stocks Production Terminée</h2>
+                @forelse ($stocksTermines as $stock)
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-gray-700">{{ $stock->aliment->nom }} ({{ $stock->code_stock }})</span>
+                        </div>
+                        <div class="text-xs text-gray-600 mb-2">
+                            <span>Fabriqué: {{ $stock->quantite_fabriquer }} {{ $stock->aliment->unite ?? '' }}</span>
+                            <span class="mx-2">|</span>
+                            <span>Utilisé: {{ $stock->quantite_utiliser }} {{ $stock->aliment->unite ?? '' }}</span>
+                            <span class="mx-2">|</span>
+                            <span>Disponible: {{ $stock->quantite_fabriquer - $stock->quantite_utiliser }} {{ $stock->aliment->unite ?? '' }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-[#008d36] h-4 rounded-full transition-all duration-300" style="width: {{ ($stock->quantite_utiliser / $stock->quantite_fabriquer) * 100 }}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">{{ round(($stock->quantite_utiliser / $stock->quantite_fabriquer) * 100, 1) }}% utilisé</p>
+                    </div>
+                @empty
+                    <p class="text-gray-500 text-center py-4">Aucun stock avec production terminée.</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Stock Aliment -->
+    <div id="stockModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 id="stockModalTitle" class="text-xl font-bold mb-4">Nouveau Stock d'Aliment</h3>
+            <form id="stockForm" method="POST" action="{{ route('admin.aliments.stock.store') }}">
+                @csrf
+                <input type="hidden" id="stockId" name="id" value="">
+                <input type="hidden" id="stockMethod" name="_method" value="">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Aliment</label>
+                    <select id="stockAliment" name="aliment_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <option value="">Sélectionner...</option>
+                        @foreach($aliments->items() as $aliment)
+                        <option value="{{ $aliment->id }}">{{ $aliment->nom }} ({{ $aliment->code }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Formule</label>
+                    <select id="stockFormule" name="formule_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <option value="">Sélectionner...</option>
+                        @if(isset($formules))
+                        @foreach($formules as $formule)
+                        <option value="{{ $formule->id }}">{{ $formule->nom }}</option>
+                        @endforeach
+                        @endif
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantité Fabriquée</label>
+                    <input type="number" id="stockQuantite" name="quantite_fabriquer" step="0.01" min="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeStockModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                        Annuler
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Mouvement Stock Aliment -->
+    <div id="mouvementStockModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Mouvement de Stock</h3>
+            <form id="mouvementStockForm" method="POST" action="{{ route('admin.aliments.stock.mouvement') }}">
+                @csrf
+                <input type="hidden" id="mouvementStockId" name="stock_aliment_id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select id="mouvementType" name="type" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <option value="entree">Entrée</option>
+                        <option value="sortie">Sortie</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
+                    <input type="number" id="mouvementQuantite" name="quantite" step="0.01" min="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input type="date" id="mouvementDate" name="date_mouvement" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeMouvementStockModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                        Annuler
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Détails Stock Aliment -->
+    <div id="stockDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Détails du Stock</h3>
+                <button onclick="closeStockDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="stockDetailsContent">
+                <!-- Le contenu sera chargé dynamiquement -->
             </div>
         </div>
     </div>
@@ -136,6 +348,11 @@
                     <input type="text" id="alimentNom" name="nom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
 
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Unité</label>
+                    <input type="text" id="alimentUnite" name="unite" placeholder="Ex: kg, litre, unité" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                </div>
+
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
                         Annuler
@@ -159,6 +376,7 @@
             document.getElementById('_method').value = '';
             document.getElementById('alimentId').value = '';
             document.getElementById('alimentNom').value = '';
+            document.getElementById('alimentUnite').value = '';
             document.getElementById('alimentPhoto').value = '';
             document.getElementById('alimentPhotoPreview').classList.add('hidden');
             document.getElementById('alimentPhotoPreview').src = '';
@@ -167,6 +385,195 @@
         function closeModal() {
             document.getElementById('alimentModal').classList.add('hidden');
             document.getElementById('alimentModal').classList.remove('flex');
+        }
+
+        function openStockModal() {
+            document.getElementById('stockModal').classList.remove('hidden');
+            document.getElementById('stockModal').classList.add('flex');
+            document.getElementById('stockModalTitle').textContent = 'Nouveau Stock d\'Aliment';
+            document.getElementById('stockForm').action = '{{ route('admin.aliments.stock.store') }}';
+            document.getElementById('stockId').value = '';
+            document.getElementById('stockMethod').value = '';
+            document.getElementById('stockForm').reset();
+        }
+
+        function closeStockModal() {
+            document.getElementById('stockModal').classList.add('hidden');
+            document.getElementById('stockModal').classList.remove('flex');
+            document.getElementById('stockForm').reset();
+        }
+
+        function editStock(stockId) {
+            const stock = @json($stockAliments).find(s => s.id === stockId);
+            if (stock) {
+                document.getElementById('stockModal').classList.remove('hidden');
+                document.getElementById('stockModal').classList.add('flex');
+                document.getElementById('stockModalTitle').textContent = 'Modifier Stock d\'Aliment';
+                document.getElementById('stockForm').action = '{{ route('admin.aliments.stock.update', ':id') }}'.replace(':id', stockId);
+                document.getElementById('stockId').value = stockId;
+                document.getElementById('stockMethod').value = 'PUT';
+                document.getElementById('stockAliment').value = stock.aliment_id;
+                document.getElementById('stockFormule').value = stock.formule_id;
+                document.getElementById('stockQuantite').value = stock.quantite_fabriquer;
+            }
+        }
+
+        function openMouvementStockModal(stockId) {
+            document.getElementById('mouvementStockModal').classList.remove('hidden');
+            document.getElementById('mouvementStockModal').classList.add('flex');
+            document.getElementById('mouvementStockId').value = stockId;
+            document.getElementById('mouvementStockForm').reset();
+            document.getElementById('mouvementDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function closeMouvementStockModal() {
+            document.getElementById('mouvementStockModal').classList.add('hidden');
+            document.getElementById('mouvementStockModal').classList.remove('flex');
+            document.getElementById('mouvementStockForm').reset();
+        }
+
+        function viewStockDetails(stockId) {
+            fetch(`/admin/aliments/stock/${stockId}/details`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    const stock = data.stock;
+                    const composants = data.composants;
+                    const historiques = data.historiques;
+
+                    let html = `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold mb-3 text-[#305327]">Informations du Stock</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Code Stock</p>
+                                    <p class="font-medium">${stock.code_stock}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Aliment</p>
+                                    <p class="font-medium">${stock.aliment.nom} (${stock.aliment.code})</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Formule</p>
+                                    <p class="font-medium">${stock.formule ? stock.formule.nom : '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Status</p>
+                                    <p class="font-medium">${stock.status}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Quantité Fabriquée</p>
+                                    <p class="font-medium">${stock.quantite_fabriquer} ${stock.aliment.unite || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Quantité Utilisée</p>
+                                    <p class="font-medium">${stock.quantite_utiliser} ${stock.aliment.unite || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Disponible</p>
+                                    <p class="font-medium ${stock.quantite_fabriquer - stock.quantite_utiliser < 10 ? 'text-red-600' : 'text-green-600'}">${stock.quantite_fabriquer - stock.quantite_utiliser} ${stock.aliment.unite || ''}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    if (composants && composants.length > 0) {
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold mb-3 text-[#305327]">Détails de la Formule</h4>
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <p class="text-sm text-gray-600">Nom: <span class="font-medium text-gray-900">${stock.formule.nom}</span></p>
+                                </div>
+                                <h5 class="text-md font-semibold mb-2 text-[#305327]">Composants</h5>
+                                <ul class="list-disc list-inside space-y-1">
+                                    ${composants.map(c => `
+                                        <li class="text-sm text-gray-700">
+                                            <span class="font-medium">${c.nom}</span> : ${c.pourcentage}% 
+                                            <span class="text-gray-500">(Quantité calculée: ${c.quantite_calculee})</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+
+                    if (historiques && historiques.length > 0) {
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold mb-3 text-[#305327]">Historique des Mouvements</h4>
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="bg-gray-50">
+                                            <th class="px-4 py-2 text-left text-sm font-semibold text-[#305327]">Type</th>
+                                            <th class="px-4 py-2 text-left text-sm font-semibold text-[#305327]">Quantité</th>
+                                            <th class="px-4 py-2 text-left text-sm font-semibold text-[#305327]">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${historiques.map(h => `
+                                            <tr class="border-b">
+                                                <td class="px-4 py-2 text-sm">
+                                                    <span class="px-2 py-1 rounded-full text-xs ${h.type === 'entree' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                                        ${h.type === 'entree' ? 'Entrée' : 'Sortie'}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-2 text-sm font-medium">${h.quantite}</td>
+                                                <td class="px-4 py-2 text-sm">${h.date_mouvement}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold mb-3 text-[#305327]">Historique des Mouvements</h4>
+                                <p class="text-sm text-gray-500">Aucun mouvement enregistré.</p>
+                            </div>
+                        `;
+                    }
+
+                    document.getElementById('stockDetailsContent').innerHTML = html;
+                    document.getElementById('stockDetailsModal').classList.remove('hidden');
+                    document.getElementById('stockDetailsModal').classList.add('flex');
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement des détails du stock');
+                });
+        }
+
+        function closeStockDetailsModal() {
+            document.getElementById('stockDetailsModal').classList.add('hidden');
+            document.getElementById('stockDetailsModal').classList.remove('flex');
+        }
+
+        function deleteStock(stockId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce stock ?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/aliments/stock/' + stockId;
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+
+                form.appendChild(csrfInput);
+                form.appendChild(methodInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
 
         function editAliment(id) {
@@ -179,6 +586,7 @@
                 document.getElementById('_method').value = 'PUT';
                 document.getElementById('alimentId').value = aliment.id;
                 document.getElementById('alimentNom').value = aliment.nom;
+                document.getElementById('alimentUnite').value = aliment.unite || '';
                 document.getElementById('alimentPhoto').value = '';
 
                 const preview = document.getElementById('alimentPhotoPreview');

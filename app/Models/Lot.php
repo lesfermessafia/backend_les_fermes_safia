@@ -8,19 +8,19 @@ class Lot extends Model
 {
     protected $fillable = [
         'code_lot',
-        'magasin_id',
+        'created_by',
     ];
 
     public function matierePremieres()
     {
-        return $this->belongsToMany(MatierePremiere::class, 'lot_matiere_premiere', 'lot_id', 'matiere_premiere_id')
-                    ->withPivot('quantite')
+        return $this->belongsToMany(MatierePremiere::class, 'lot_matiere_premiere')
+                    ->withPivot('quantite', 'quantite_utiliser', 'magasin_id')
                     ->withTimestamps();
     }
 
-    public function magasin()
+    public function createdBy()
     {
-        return $this->belongsTo(Magasin::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public static function generateCodeLot()

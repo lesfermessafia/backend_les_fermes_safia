@@ -12,6 +12,7 @@ class Aliment extends Model
         'nom',
         'code',
         'photo',
+        'unite',
     ];
 
     public static function generateCode()

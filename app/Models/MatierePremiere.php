@@ -14,6 +14,11 @@ class MatierePremiere extends Model
         'code',
         'image',
         'unite',
+        'seuil_alerte',
+    ];
+
+    protected $casts = [
+        'seuil_alerte' => 'decimal:2',
     ];
 
     protected static function boot()
@@ -37,5 +42,12 @@ class MatierePremiere extends Model
         } while (self::where('code', $code)->exists());
 
         return $code;
+    }
+
+    public function lots()
+    {
+        return $this->belongsToMany(Lot::class, 'lot_matiere_premiere')
+                    ->withPivot('quantite', 'quantite_utiliser')
+                    ->withTimestamps();
     }
 }

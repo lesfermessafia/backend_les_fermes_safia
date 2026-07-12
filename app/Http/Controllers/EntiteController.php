@@ -437,4 +437,10 @@ class EntiteController extends Controller
 
         return response()->json(['message' => 'Magasin supprimé avec succès']);
     }
+
+    public function getAllMagasins()
+    {
+        $magasins = Magasin::select('id', 'nom')->get();
+        return response()->json($magasins);
+    }
 }
