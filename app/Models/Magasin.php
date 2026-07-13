@@ -27,4 +27,11 @@ class Magasin extends Model
     {
         return $this->belongsTo(User::class, 'gerant');
     }
+
+    public function matieresPremieres()
+    {
+        return $this->belongsToMany(MatierePremiere::class, 'lot_matiere_premiere')
+                    ->withPivot('quantite', 'quantite_utiliser')
+                    ->withTimestamps();
+    }
 }

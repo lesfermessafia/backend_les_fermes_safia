@@ -14,6 +14,10 @@ class HistoriqueOeuf extends Model
         'date_mouvement',
     ];
 
+    protected $casts = [
+        'date_mouvement' => 'date',
+    ];
+
     public function stockOeuf()
     {
         return $this->belongsTo(StockOeuf::class);

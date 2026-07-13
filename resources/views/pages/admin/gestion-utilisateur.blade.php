@@ -61,15 +61,15 @@
             </div>
 
             <!-- Filtres -->
-            <form method="GET" action="{{ route('admin.users.index') }}" class="mb-6">
+            <div class="mb-6">
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="flex-1">
                         <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                        <input type="text" id="search" name="search" value="{{ request('search') }}" placeholder="Nom, prénom, email, téléphone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <input type="text" id="search" value="{{ request('search') }}" placeholder="Nom, prénom, email, téléphone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" oninput="debouncedSearchUsers()">
                     </div>
                     <div class="w-full md:w-48">
                         <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
-                        <select id="role" name="role" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <select id="role" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="debouncedSearchUsers()">
                             <option value="all">Tous les rôles</option>
                             <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                             <option value="comptable" {{ request('role') == 'comptable' ? 'selected' : '' }}>Comptable</option>
@@ -78,18 +78,15 @@
                     </div>
                     <div class="w-full md:w-48">
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                        <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <select id="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="debouncedSearchUsers()">
                             <option value="all">Tous les statuts</option>
                             <option value="actif" {{ request('status') == 'actif' ? 'selected' : '' }}>Actif</option>
                             <option value="bloque" {{ request('status') == 'bloque' ? 'selected' : '' }}>Bloqué</option>
                         </select>
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                        <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
-                    </div>
+                    <button onclick="resetSearchUsers()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">Réinitialiser</button>
                 </div>
-            </form>
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -428,7 +425,70 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initUserCharts);
+        // Fonction debounce pour éviter trop de requêtes
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Recherche automatique pour les utilisateurs
+        const debouncedSearchUsers = debounce(function() {
+            const search = document.getElementById('search').value;
+            const role = document.getElementById('role').value;
+            const status = document.getElementById('status').value;
+            const url = new URL(window.location.href);
+            if (search) {
+                url.searchParams.set('search', search);
+            } else {
+                url.searchParams.delete('search');
+            }
+            if (role && role !== 'all') {
+                url.searchParams.set('role', role);
+            } else {
+                url.searchParams.delete('role');
+            }
+            if (status && status !== 'all') {
+                url.searchParams.set('status', status);
+            } else {
+                url.searchParams.delete('status');
+            }
+            history.pushState({}, '', url.toString());
+            location.reload();
+        }, 500);
+
+        function resetSearchUsers() {
+            document.getElementById('search').value = '';
+            document.getElementById('role').value = 'all';
+            document.getElementById('status').value = 'all';
+            const url = new URL(window.location.href);
+            url.searchParams.delete('search');
+            url.searchParams.delete('role');
+            url.searchParams.delete('status');
+            history.pushState({}, '', url.toString());
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const search = document.getElementById('search');
+            const role = document.getElementById('role');
+            const status = document.getElementById('status');
+            
+            if (search || role || status) {
+                const params = new URLSearchParams(window.location.search);
+                if (search) search.value = params.get('search') || '';
+                if (role) role.value = params.get('role') || 'all';
+                if (status) status.value = params.get('status') || 'all';
+            }
+            
+            initUserCharts();
+        });
 
         async function deleteUser(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {

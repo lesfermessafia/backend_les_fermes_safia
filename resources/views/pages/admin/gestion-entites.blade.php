@@ -101,19 +101,15 @@
                 </div>
 
                 <!-- Filtres Sites -->
-                <form method="GET" action="{{ route('admin.entites.index') }}" class="mb-4">
-                    <input type="hidden" name="tab" value="sites">
+                <div class="mb-4">
                     <div class="flex flex-col md:flex-row gap-4 items-end">
                         <div class="flex-1">
                             <label for="searchSites" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                            <input type="text" id="searchSites" name="search" value="{{ request('search') }}" placeholder="Nom, adresse, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <input type="text" id="searchSites" value="{{ request('search') }}" placeholder="Nom, adresse, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" oninput="debouncedSearchSites()">
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                            <a href="{{ route('admin.entites.index', ['tab' => 'sites']) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
-                        </div>
+                        <button onclick="resetSearchSites()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">Réinitialiser</button>
                     </div>
-                </form>
+                </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -177,28 +173,24 @@
                 </div>
 
                 <!-- Filtres Fermes -->
-                <form method="GET" action="{{ route('admin.entites.index') }}" class="mb-4">
-                    <input type="hidden" name="tab" value="fermes">
+                <div class="mb-4">
                     <div class="flex flex-col md:flex-row gap-4 items-end">
                         <div class="flex-1">
                             <label for="searchFermes" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                            <input type="text" id="searchFermes" name="search" value="{{ request('search') }}" placeholder="Nom, site, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <input type="text" id="searchFermes" value="{{ request('search') }}" placeholder="Nom, site, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" oninput="debouncedSearchFermes()">
                         </div>
                         <div class="w-full md:w-56">
                             <label for="siteFermes" class="block text-sm font-medium text-gray-700 mb-1">Site</label>
-                            <select id="siteFermes" name="site" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <select id="siteFermes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="debouncedSearchFermes()">
                                 <option value="">Tous les sites</option>
                                 @foreach ($allSites as $site)
                                     <option value="{{ $site->id }}" {{ request('site') == $site->id ? 'selected' : '' }}>{{ $site->nom }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                            <a href="{{ route('admin.entites.index', ['tab' => 'fermes']) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
-                        </div>
+                        <button onclick="resetSearchFermes()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">Réinitialiser</button>
                     </div>
-                </form>
+                </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -225,6 +217,12 @@
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $ferme->largeur ?? '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $ferme->gerantUser ? $ferme->gerantUser->nom . ' ' . $ferme->gerantUser->prenom : '-' }}</td>
                                 <td class="px-4 py-3 text-sm">
+                                    <button onclick="viewFermePoulets({{ $ferme->id }})" class="text-blue-600 hover:text-blue-800 mr-2" title="Voir poulets">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
                                     <button onclick="editFerme({{ $ferme->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -262,28 +260,24 @@
                 </div>
 
                 <!-- Filtres Magasins -->
-                <form method="GET" action="{{ route('admin.entites.index') }}" class="mb-4">
-                    <input type="hidden" name="tab" value="magasins">
+                <div class="mb-4">
                     <div class="flex flex-col md:flex-row gap-4 items-end">
                         <div class="flex-1">
                             <label for="searchMagasins" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                            <input type="text" id="searchMagasins" name="search" value="{{ request('search') }}" placeholder="Nom, site, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <input type="text" id="searchMagasins" value="{{ request('search') }}" placeholder="Nom, site, gérant..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" oninput="debouncedSearchMagasins()">
                         </div>
                         <div class="w-full md:w-56">
                             <label for="siteMagasins" class="block text-sm font-medium text-gray-700 mb-1">Site</label>
-                            <select id="siteMagasins" name="site" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                            <select id="siteMagasins" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="debouncedSearchMagasins()">
                                 <option value="">Tous les sites</option>
                                 @foreach ($allSites as $site)
                                     <option value="{{ $site->id }}" {{ request('site') == $site->id ? 'selected' : '' }}>{{ $site->nom }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                            <a href="{{ route('admin.entites.index', ['tab' => 'magasins']) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center">Réinitialiser</a>
-                        </div>
+                        <button onclick="resetSearchMagasins()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">Réinitialiser</button>
                     </div>
-                </form>
+                </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -310,6 +304,11 @@
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $magasin->largeur ?? '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $magasin->gerantUser ? $magasin->gerantUser->nom . ' ' . $magasin->gerantUser->prenom : '-' }}</td>
                                 <td class="px-4 py-3 text-sm">
+                                    <button onclick="viewMagasinStocks({{ $magasin->id }})" class="text-blue-600 hover:text-blue-800 mr-2" title="Voir stocks">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                        </svg>
+                                    </button>
                                     <button onclick="editMagasin({{ $magasin->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -624,6 +623,95 @@
         </div>
     </div>
 
+    <!-- Modal Poulets de la Ferme -->
+    <div id="fermePouletsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h3 id="fermePouletsModalTitle" class="text-xl font-bold mb-4">Poulets de la Ferme</h3>
+            <div id="fermePouletsContent">
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-[#305327] mb-3">Poulets Actuellement dans la Ferme</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code Stock</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Poulet</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Statut</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Date Entrée</th>
+                                </tr>
+                            </thead>
+                            <tbody id="currentPouletsTable">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-[#305327] mb-3">Historique des Poulets</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code Stock</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Poulet</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Statut</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Date Sortie</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historiquePouletsTable">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button type="button" onclick="closeFermePouletsModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Stocks du Magasin -->
+    <div id="magasinStocksModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h3 id="magasinStocksModalTitle" class="text-xl font-bold mb-4">Stocks du Magasin</h3>
+            <div id="magasinStocksContent">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Matière Première</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité Utilisée</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Unité</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Seuil d'Alerte</th>
+                            </tr>
+                        </thead>
+                        <tbody id="magasinStocksTable">
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button type="button" onclick="closeMagasinStocksModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function showAjaxError(message) {
             const errorDiv = document.getElementById('ajaxError');
@@ -696,6 +784,60 @@
                 const siteOrAdresse = type === 'sites'
                     ? escapeHtml(item.adresse ?? '-')
                     : escapeHtml(item.site ?? '-');
+                
+                let actionsHtml = '';
+                if (type === 'fermes') {
+                    actionsHtml = `
+                        <button onclick="viewFermePoulets(${item.id})" class="text-blue-600 hover:text-blue-800 mr-2" title="Voir poulets">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="edit${capitalize(typeSingular)}(${item.id})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="delete${capitalize(typeSingular)}(${item.id})" class="text-red-600 hover:text-red-800" title="Supprimer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    `;
+                } else if (type === 'magasins') {
+                    actionsHtml = `
+                        <button onclick="viewMagasinStocks(${item.id})" class="text-blue-600 hover:text-blue-800 mr-2" title="Voir stocks">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                        </button>
+                        <button onclick="edit${capitalize(typeSingular)}(${item.id})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="delete${capitalize(typeSingular)}(${item.id})" class="text-red-600 hover:text-red-800" title="Supprimer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    `;
+                } else {
+                    actionsHtml = `
+                        <button onclick="edit${capitalize(typeSingular)}(${item.id})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="delete${capitalize(typeSingular)}(${item.id})" class="text-red-600 hover:text-red-800" title="Supprimer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    `;
+                }
+                
                 return `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(item.nom)}</td>
@@ -705,10 +847,7 @@
                         <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.longueur ?? '-')}</td>
                         <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.largeur ?? '-')}</td>
                         <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(item.gerant ?? '-')}</td>
-                        <td class="px-4 py-3 text-sm">
-                            <button onclick="edit${capitalize(typeSingular)}(${item.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
-                            <button onclick="delete${capitalize(typeSingular)}(${item.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
-                        </td>
+                        <td class="px-4 py-3 text-sm">${actionsHtml}</td>
                     </tr>
                 `;
             }).join('');
@@ -737,6 +876,103 @@
                     ? Object.entries(stats.magasinsBySite).map(([site, count]) => `<li class="flex justify-between"><span>${escapeHtml(site)}</span><span class="font-semibold">${escapeHtml(String(count))}</span></li>`).join('')
                     : '<li class="text-gray-500">Aucune donnée.</li>';
             }
+        }
+
+        // Fonction debounce pour éviter trop de requêtes
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Recherche automatique pour les sites
+        const debouncedSearchSites = debounce(function() {
+            const search = document.getElementById('searchSites').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'sites');
+            if (search) {
+                url.searchParams.set('search', search);
+            } else {
+                url.searchParams.delete('search');
+            }
+            history.pushState({}, '', url.toString());
+            loadEntities(url.toString());
+        }, 500);
+
+        function resetSearchSites() {
+            document.getElementById('searchSites').value = '';
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'sites');
+            url.searchParams.delete('search');
+            loadEntities(url.toString());
+        }
+
+        // Recherche automatique pour les fermes
+        const debouncedSearchFermes = debounce(function() {
+            const search = document.getElementById('searchFermes').value;
+            const site = document.getElementById('siteFermes').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'fermes');
+            if (search) {
+                url.searchParams.set('search', search);
+            } else {
+                url.searchParams.delete('search');
+            }
+            if (site) {
+                url.searchParams.set('site', site);
+            } else {
+                url.searchParams.delete('site');
+            }
+            history.pushState({}, '', url.toString());
+            loadEntities(url.toString());
+        }, 500);
+
+        function resetSearchFermes() {
+            document.getElementById('searchFermes').value = '';
+            document.getElementById('siteFermes').value = '';
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'fermes');
+            url.searchParams.delete('search');
+            url.searchParams.delete('site');
+            history.pushState({}, '', url.toString());
+            loadEntities(url.toString());
+        }
+
+        // Recherche automatique pour les magasins
+        const debouncedSearchMagasins = debounce(function() {
+            const search = document.getElementById('searchMagasins').value;
+            const site = document.getElementById('siteMagasins').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'magasins');
+            if (search) {
+                url.searchParams.set('search', search);
+            } else {
+                url.searchParams.delete('search');
+            }
+            if (site) {
+                url.searchParams.set('site', site);
+            } else {
+                url.searchParams.delete('site');
+            }
+            history.pushState({}, '', url.toString());
+            loadEntities(url.toString());
+        }, 500);
+
+        function resetSearchMagasins() {
+            document.getElementById('searchMagasins').value = '';
+            document.getElementById('siteMagasins').value = '';
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'magasins');
+            url.searchParams.delete('search');
+            url.searchParams.delete('site');
+            history.pushState({}, '', url.toString());
+            loadEntities(url.toString());
         }
 
         function updateTables(data) {
@@ -773,7 +1009,6 @@
                 if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
                 const data = await response.json();
                 updateTables(data);
-                syncFilterInputsFromUrl();
             } catch (error) {
                 showAjaxError('Erreur lors du chargement des entités: ' + error.message);
             }
@@ -781,12 +1016,22 @@
 
         function syncFilterInputsFromUrl() {
             const params = new URLSearchParams(window.location.search);
-            document.querySelectorAll('.tab-content form [name="search"]').forEach(input => {
-                input.value = params.get('search') || '';
-            });
-            document.querySelectorAll('.tab-content form [name="site"]').forEach(select => {
-                select.value = params.get('site') || '';
-            });
+            
+            // Sync sites
+            const searchSites = document.getElementById('searchSites');
+            if (searchSites) searchSites.value = params.get('search') || '';
+            
+            // Sync fermes
+            const searchFermes = document.getElementById('searchFermes');
+            const siteFermes = document.getElementById('siteFermes');
+            if (searchFermes) searchFermes.value = params.get('search') || '';
+            if (siteFermes) siteFermes.value = params.get('site') || '';
+            
+            // Sync magasins
+            const searchMagasins = document.getElementById('searchMagasins');
+            const siteMagasins = document.getElementById('siteMagasins');
+            if (searchMagasins) searchMagasins.value = params.get('search') || '';
+            if (siteMagasins) siteMagasins.value = params.get('site') || '';
         }
 
         // Restaurer l'onglet actif et activer les filtres AJAX au chargement
@@ -797,28 +1042,6 @@
                 switchTab(tab, false);
             }
             syncFilterInputsFromUrl();
-
-            document.querySelectorAll('.tab-content form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const formData = new URLSearchParams(new FormData(form));
-                    const url = `${form.action}?${formData.toString()}`;
-                    loadEntities(url);
-                    history.pushState({}, '', url);
-                });
-
-                const resetLink = form.querySelector('a[href]');
-                if (resetLink) {
-                    resetLink.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        form.reset();
-                        const formData = new URLSearchParams(new FormData(form));
-                        const url = `${form.action}?${formData.toString()}`;
-                        loadEntities(url);
-                        history.pushState({}, '', url);
-                    });
-                }
-            });
         });
 
         window.addEventListener('popstate', function() {
@@ -828,7 +1051,6 @@
                 switchTab(tab, false);
             }
             syncFilterInputsFromUrl();
-            loadEntities(window.location.href);
         });
 
         // Site Modal
@@ -1338,6 +1560,148 @@
                     markerMagasin = null;
                 }
             }, 100);
+        }
+
+        async function viewFermePoulets(fermeId) {
+            document.getElementById('fermePouletsModal').classList.remove('hidden');
+            document.getElementById('fermePouletsModal').classList.add('flex');
+            document.getElementById('fermePouletsModalTitle').textContent = 'Poulets de la Ferme';
+            
+            // Réinitialiser les tables
+            document.getElementById('currentPouletsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Chargement...</td></tr>';
+            document.getElementById('historiquePouletsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Chargement...</td></tr>';
+
+            try {
+                const response = await fetch(`/admin/entites/fermes/${fermeId}/poulets`, {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Poulets actuels
+                    let currentHtml = '';
+                    if (data.current && data.current.length > 0) {
+                        data.current.forEach(stock => {
+                            currentHtml += `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.code_stock}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.poulet ? stock.poulet.nom : 'Non assigné'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.quantite}</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                            ${stock.statut === 'en_stock' ? 'bg-green-100 text-green-700' : 
+                                            (stock.statut === 'vendu' ? 'bg-blue-100 text-blue-700' : 
+                                            (stock.statut === 'mort' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'))}">
+                                            ${stock.statut}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">${stock.date_entree || '-'}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        currentHtml = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Aucun poulet actuellement dans cette ferme</td></tr>';
+                    }
+                    document.getElementById('currentPouletsTable').innerHTML = currentHtml;
+
+                    // Historique
+                    let historiqueHtml = '';
+                    if (data.historique && data.historique.length > 0) {
+                        data.historique.forEach(stock => {
+                            historiqueHtml += `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.code_stock}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.poulet ? stock.poulet.nom : 'Non assigné'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.quantite}</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                            ${stock.statut === 'en_stock' ? 'bg-green-100 text-green-700' : 
+                                            (stock.statut === 'vendu' ? 'bg-blue-100 text-blue-700' : 
+                                            (stock.statut === 'mort' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'))}">
+                                            ${stock.statut}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">${stock.date_sortie || '-'}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        historiqueHtml = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Aucun historique pour cette ferme</td></tr>';
+                    }
+                    document.getElementById('historiquePouletsTable').innerHTML = historiqueHtml;
+                } else {
+                    document.getElementById('currentPouletsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erreur lors du chargement</td></tr>';
+                    document.getElementById('historiquePouletsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erreur lors du chargement</td></tr>';
+                }
+            } catch (error) {
+                document.getElementById('currentPouletsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erreur: ' + error.message + '</td></tr>';
+                document.getElementById('historiquePouletsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erreur: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function closeFermePouletsModal() {
+            document.getElementById('fermePouletsModal').classList.add('hidden');
+            document.getElementById('fermePouletsModal').classList.remove('flex');
+        }
+
+        async function viewMagasinStocks(magasinId) {
+            document.getElementById('magasinStocksModal').classList.remove('hidden');
+            document.getElementById('magasinStocksModal').classList.add('flex');
+            document.getElementById('magasinStocksModalTitle').textContent = 'Stocks du Magasin';
+            
+            // Réinitialiser la table
+            document.getElementById('magasinStocksTable').innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Chargement...</td></tr>';
+
+            try {
+                const response = await fetch(`/admin/entites/magasins/${magasinId}/stocks`, {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    let stocksHtml = '';
+                    if (data && data.length > 0) {
+                        data.forEach(stock => {
+                            const quantiteRestante = stock.quantite - stock.quantite_utiliser;
+                            const isBelowThreshold = stock.seuil_alerte && quantiteRestante < stock.seuil_alerte;
+                            
+                            stocksHtml += `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.code}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.nom}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.quantite}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${stock.quantite_utiliser}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">${stock.unite}</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                            ${isBelowThreshold ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                                            ${stock.seuil_alerte ? stock.seuil_alerte : '-'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        stocksHtml = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun stock dans ce magasin</td></tr>';
+                    }
+                    document.getElementById('magasinStocksTable').innerHTML = stocksHtml;
+                } else {
+                    document.getElementById('magasinStocksTable').innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-red-500">Erreur lors du chargement</td></tr>';
+                }
+            } catch (error) {
+                document.getElementById('magasinStocksTable').innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-red-500">Erreur: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function closeMagasinStocksModal() {
+            document.getElementById('magasinStocksModal').classList.add('hidden');
+            document.getElementById('magasinStocksModal').classList.remove('flex');
         }
 
         // Initialize maps on page load

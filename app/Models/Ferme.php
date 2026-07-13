@@ -27,4 +27,9 @@ class Ferme extends Model
     {
         return $this->belongsTo(User::class, 'gerant');
     }
+
+    public function stocksPoulets()
+    {
+        return $this->hasMany(StockPoulet::class);
+    }
 }

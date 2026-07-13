@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Poulet;
+use App\Models\StockPoulet;
+use App\Models\Ferme;
 
 class PouletWebController extends Controller
 {
@@ -30,6 +32,46 @@ class PouletWebController extends Controller
             ->pluck('total', 'race')
             ->toArray();
 
+        // Données des stocks de poulets
+        $stocksQuery = StockPoulet::with(['ferme', 'poulet']);
+
+        if ($search = $request->input('search')) {
+            $stocksQuery->where(function ($q) use ($search) {
+                $q->where('code_stock', 'like', "%{$search}%")
+                  ->orWhereHas('poulet', function ($q) use ($search) {
+                      $q->where('nom', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $totalStocks = $stocksQuery->count();
+        $stocks = $stocksQuery->orderBy('id', 'desc')->paginate(10)->withQueryString();
+
+        $statsByPouletStocks = (clone StockPoulet::query())
+            ->with('poulet')
+            ->selectRaw('poulet_id, SUM(quantite) as total')
+            ->groupBy('poulet_id')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->poulet ? $item->poulet->nom : 'Non assigné' => $item->total];
+            })
+            ->toArray();
+
+        $statsByStatutStocks = (clone StockPoulet::query())
+            ->selectRaw('statut, SUM(quantite) as total')
+            ->groupBy('statut')
+            ->pluck('total', 'statut')
+            ->toArray();
+
+        $totalQuantiteStocks = StockPoulet::sum('quantite');
+        $totalMorts = StockPoulet::where('statut', 'mort')->sum('quantite');
+        $totalVendus = StockPoulet::where('statut', 'vendu')->sum('quantite');
+        $totalEnStock = StockPoulet::where('statut', 'en_stock')->sum('quantite');
+        $totalEnProduction = StockPoulet::where('statut', 'en_production')->sum('quantite');
+
+        $fermes = Ferme::all();
+        $pouletsStocks = Poulet::all();
+
         if ($request->ajax()) {
             return response()->json([
                 'poulets' => $poulets->items(),
@@ -39,7 +81,22 @@ class PouletWebController extends Controller
             ]);
         }
 
-        return view('pages.admin.gestion-poulets', compact('poulets', 'totalPoulets', 'statsByRace'));
+        return view('pages.admin.gestion-poulets', compact(
+            'poulets',
+            'totalPoulets',
+            'statsByRace',
+            'stocks',
+            'totalStocks',
+            'totalQuantiteStocks',
+            'statsByPouletStocks',
+            'statsByStatutStocks',
+            'totalMorts',
+            'totalVendus',
+            'totalEnStock',
+            'totalEnProduction',
+            'fermes',
+            'pouletsStocks'
+        ));
     }
 
     public function store(Request $request)
@@ -116,5 +173,26 @@ class PouletWebController extends Controller
         $poulet->delete();
 
         return redirect()->route('admin.poulets.index')->with('success', 'Poulet supprimé avec succès');
+    }
+
+    public function destroyMultiple(Request $request)
+    {
+        $ids = $request->input('ids', []);
+
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'Aucun ID fourni'], 400);
+        }
+
+        $poulets = Poulet::whereIn('id', $ids)->get();
+
+        foreach ($poulets as $poulet) {
+            if ($poulet->photo && Storage::disk('public')->exists($poulet->photo)) {
+                Storage::disk('public')->delete($poulet->photo);
+            }
+        }
+
+        Poulet::whereIn('id', $ids)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Poulets supprimés avec succès']);
     }
 }

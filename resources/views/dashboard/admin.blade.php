@@ -54,7 +54,7 @@
 
         <h2 class="mb-6 text-2xl font-semibold text-[#305327]">Pages du Dashboard Admin</h2>
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <a href="#" class="group block h-full">
+            <a href="{{ route('admin.dashboard.stats') }}" class="group block h-full">
                 <div class="h-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-[#008d36] hover:shadow-lg">
                     <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#008d36]/10 text-[#008d36] transition-colors group-hover:bg-[#008d36] group-hover:text-white">
                         <span class="text-2xl">📊</span>
@@ -121,6 +121,16 @@
                     </div>
                     <h3 class="font-semibold text-gray-900">Gestion Formule</h3>
                     <p class="mt-2 text-sm text-gray-600">Formules d'alimentation</p>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.oeufs.index') }}" class="group block h-full">
+                <div class="h-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-yellow-500 hover:shadow-lg">
+                    <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 transition-colors group-hover:bg-yellow-500 group-hover:text-white">
+                        <span class="text-2xl">🥚</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">Gestion Œufs</h3>
+                    <p class="mt-2 text-sm text-gray-600">Stock et mouvements d'œufs</p>
                 </div>
             </a>
 

@@ -9,6 +9,9 @@ use App\Http\Controllers\StockMatierePremiereWebController;
 use App\Http\Controllers\AlimentWebController;
 use App\Http\Controllers\PouletWebController;
 use App\Http\Controllers\FormuleWebController;
+use App\Http\Controllers\StockPouletWebController;
+use App\Http\Controllers\StockOeufWebController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Storage;
 
 // Route pour servir les images uploadées
@@ -40,6 +43,12 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard.admin');
     })->name('admin.dashboard')->middleware('role:admin');
 
+    // Dashboard Statistiques Admin
+    Route::middleware('role:admin')->prefix('admin/dashboard-stats')->name('admin.dashboard.')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('stats');
+        Route::get('/data', [DashboardController::class, 'getStats'])->name('stats.data');
+    });
+
     // Routes de gestion des utilisateurs (Admin uniquement)
     Route::middleware('role:admin')->prefix('admin/users')->name('admin.users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
@@ -69,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}', [EntiteController::class, 'showFerme'])->name('show');
             Route::put('/{id}', [EntiteController::class, 'updateFerme'])->name('update');
             Route::delete('/{id}', [EntiteController::class, 'destroyFerme'])->name('destroy');
+            Route::get('/{id}/poulets', [EntiteController::class, 'getFermePoulets'])->name('poulets');
         });
         
         // Magasins
@@ -78,6 +88,7 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{id}', [EntiteController::class, 'updateMagasin'])->name('update');
             Route::delete('/{id}', [EntiteController::class, 'destroyMagasin'])->name('destroy');
             Route::get('/all', [EntiteController::class, 'getAllMagasins'])->name('all');
+            Route::get('/{id}/stocks', [EntiteController::class, 'getMagasinStocks'])->name('stocks');
         });
     });
 
@@ -128,6 +139,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [PouletWebController::class, 'store'])->name('store');
         Route::put('/{id}', [PouletWebController::class, 'update'])->name('update');
         Route::delete('/{id}', [PouletWebController::class, 'destroy'])->name('destroy');
+        Route::post('/destroy-multiple', [PouletWebController::class, 'destroyMultiple'])->name('destroyMultiple');
+
+        // Routes de gestion des stocks de poulets
+        Route::post('/stocks', [StockPouletWebController::class, 'store'])->name('stocks.store');
+        Route::put('/stocks/{id}', [StockPouletWebController::class, 'update'])->name('stocks.update');
+        Route::delete('/stocks/{id}', [StockPouletWebController::class, 'destroy'])->name('stocks.destroy');
+        Route::post('/stocks/destroy-multiple', [StockPouletWebController::class, 'destroyMultiple'])->name('stocks.destroyMultiple');
+        Route::post('/stocks/mouvement', [StockPouletWebController::class, 'mouvement'])->name('stocks.mouvement');
+        Route::get('/stocks/{id}/historique', [StockPouletWebController::class, 'historique'])->name('stocks.historique');
     });
 
     // Routes de gestion des formules (Admin uniquement)
@@ -136,6 +156,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [FormuleWebController::class, 'store'])->name('store');
         Route::put('/{id}', [FormuleWebController::class, 'update'])->name('update');
         Route::delete('/{id}', [FormuleWebController::class, 'destroy'])->name('destroy');
+    });
+
+    // Routes de gestion des œufs (Admin uniquement)
+    Route::middleware('role:admin')->prefix('admin/oeufs')->name('admin.oeufs.')->group(function () {
+        Route::get('/', [StockOeufWebController::class, 'index'])->name('index');
+        Route::post('/', [StockOeufWebController::class, 'store'])->name('store');
+        Route::put('/{id}', [StockOeufWebController::class, 'update'])->name('update');
+        Route::delete('/{id}', [StockOeufWebController::class, 'destroy'])->name('destroy');
+        Route::post('/destroy-multiple', [StockOeufWebController::class, 'destroyMultiple'])->name('destroyMultiple');
+        Route::post('/mouvement', [StockOeufWebController::class, 'mouvement'])->name('mouvement');
+        Route::get('/{id}/historique', [StockOeufWebController::class, 'historique'])->name('historique');
     });
 
     // Dashboard Comptable

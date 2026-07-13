@@ -52,18 +52,15 @@
             </div>
 
             <!-- Filtre -->
-            <form method="GET" action="{{ route('admin.formules.index') }}" class="mb-4 filter-form">
+            <div class="mb-4">
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="flex-1">
                         <label for="searchFormules" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                        <input type="text" id="searchFormules" name="search" value="{{ request('search') }}" placeholder="Nom ou matière première..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <input type="text" id="searchFormules" value="{{ request('search') }}" placeholder="Nom ou matière première..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" oninput="debouncedSearchFormules()">
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                        <a href="{{ route('admin.formules.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center reset-link">Réinitialiser</a>
-                    </div>
+                    <button onclick="resetSearchFormules()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">Réinitialiser</button>
                 </div>
-            </form>
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -135,6 +132,44 @@
                 </div>
             </div>
         </div>
+
+        <!-- Section Utilisation des Formules -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-2xl font-bold text-[#305327] mb-6">Utilisation des Formules dans les Stocks</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach ($formuleUsageStats as $formuleId => $stats)
+                    @php
+                        $formule = \App\Models\Formule::find($formuleId);
+                    @endphp
+                    @if ($formule)
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-[#008d36] transition duration-200 cursor-pointer" onclick="showFormuleUsage({{ $formuleId }}, '{{ $formule->nom }}')">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-semibold text-[#305327]">{{ $formule->nom }}</h3>
+                                <span class="bg-[#008d36] text-white text-xs px-2 py-1 rounded-full">{{ $stats['count'] }} utilisation{{ $stats['count'] > 1 ? 's' : '' }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Cliquez pour voir les détails</p>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Historique Utilisation Formule -->
+    <div id="formuleUsageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="formuleUsageModalTitle" class="text-xl font-bold">Historique d'utilisation</h3>
+                <button onclick="closeFormuleUsageModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="formuleUsageContent">
+                <!-- Le contenu sera rempli par JavaScript -->
+            </div>
+        </div>
     </div>
 
     <!-- Modal -->
@@ -181,6 +216,7 @@
     <script>
         let formules = @json($formules->items());
         const matieresPremieres = @json($matieresPremieres);
+        const formuleUsageStats = @json($formuleUsageStats);
         let composantIndex = 0;
 
         function addComposantRow(matiereId = '', quantite = '') {
@@ -293,6 +329,39 @@
             }
         }
 
+        function showFormuleUsage(formuleId, formuleNom) {
+            const stats = formuleUsageStats[formuleId];
+            if (!stats) return;
+
+            document.getElementById('formuleUsageModalTitle').textContent = `Historique d'utilisation - ${formuleNom}`;
+
+            const content = document.getElementById('formuleUsageContent');
+            if (stats.stocks.length === 0) {
+                content.innerHTML = '<p class="text-gray-500 text-center py-4">Aucune utilisation trouvée pour cette formule.</p>';
+            } else {
+                let html = '<div class="overflow-x-auto"><table class="w-full"><thead><tr class="bg-gray-50"><th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code Stock</th><th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Aliment</th><th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité Fabriquée</th><th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité Utilisée</th><th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Statut</th></tr></thead><tbody>';
+                stats.stocks.forEach(stock => {
+                    html += `<tr class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-900">${stock.code_stock}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${stock.aliment_nom} (${stock.aliment_code})</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${stock.quantite_fabriquer}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${stock.quantite_utiliser}</td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs font-semibold ${stock.status === 'production terminer' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${stock.status}</span></td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                content.innerHTML = html;
+            }
+
+            document.getElementById('formuleUsageModal').classList.remove('hidden');
+            document.getElementById('formuleUsageModal').classList.add('flex');
+        }
+
+        function closeFormuleUsageModal() {
+            document.getElementById('formuleUsageModal').classList.add('hidden');
+            document.getElementById('formuleUsageModal').classList.remove('flex');
+        }
+
         function escapeHtml(text) {
             if (text === null || text === undefined) return '';
             return String(text)
@@ -318,8 +387,16 @@
                         </ul>
                     </td>
                     <td class="px-4 py-3 text-sm">
-                        <button onclick="editFormule(${f.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
-                        <button onclick="deleteFormule(${f.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
+                        <button onclick="editFormule(${f.id})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="deleteFormule(${f.id})" class="text-red-600 hover:text-red-800" title="Supprimer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
                     </td>
                 </tr>
             `).join('');
@@ -351,32 +428,54 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('.filter-form');
-            const resetLink = document.querySelector('.reset-link');
+        // Fonction debounce pour éviter trop de requêtes
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const formData = new URLSearchParams(new FormData(form));
-                    const url = `${form.action}?${formData.toString()}`;
-                    loadFormules(url);
-                    history.pushState({}, '', url);
-                });
+        // Recherche automatique pour les formules
+        const debouncedSearchFormules = debounce(function() {
+            const search = document.getElementById('searchFormules').value;
+            const url = new URL(window.location.href);
+            if (search) {
+                url.searchParams.set('search', search);
+            } else {
+                url.searchParams.delete('search');
             }
+            history.pushState({}, '', url.toString());
+            loadFormules(url.toString());
+        }, 500);
 
-            if (resetLink) {
-                resetLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    form.reset();
-                    const url = form.action;
-                    loadFormules(url);
-                    history.pushState({}, '', url);
-                });
+        function resetSearchFormules() {
+            document.getElementById('searchFormules').value = '';
+            const url = new URL(window.location.href);
+            url.searchParams.delete('search');
+            history.pushState({}, '', url.toString());
+            loadFormules(url.toString());
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchFormules = document.getElementById('searchFormules');
+            if (searchFormules) {
+                const params = new URLSearchParams(window.location.search);
+                searchFormules.value = params.get('search') || '';
             }
         });
 
         window.addEventListener('popstate', function() {
+            const params = new URLSearchParams(window.location.search);
+            const searchFormules = document.getElementById('searchFormules');
+            if (searchFormules) {
+                searchFormules.value = params.get('search') || '';
+            }
             loadFormules(window.location.href);
         });
     </script>

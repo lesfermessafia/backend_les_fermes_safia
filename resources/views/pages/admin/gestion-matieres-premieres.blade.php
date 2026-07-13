@@ -52,18 +52,15 @@
             </div>
 
             <!-- Filtre -->
-            <form method="GET" action="{{ route('admin.matieres-premieres.index') }}" class="mb-4 filter-form">
+            <div class="mb-4">
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="flex-1">
                         <label for="searchMatieres" class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-                        <input type="text" id="searchMatieres" name="search" value="{{ request('search') }}" placeholder="Code, nom ou unité..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <input type="text" id="searchMatieres" value="{{ request('search') }}" placeholder="Code, nom ou unité..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" oninput="debouncedSearchMatieres()">
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">Filtrer</button>
-                        <a href="{{ route('admin.matieres-premieres.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200 inline-flex items-center reset-link">Réinitialiser</a>
-                    </div>
+                    <button onclick="resetSearchMatieres()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-200">Réinitialiser</button>
                 </div>
-            </form>
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -803,32 +800,54 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('.filter-form');
-            const resetLink = document.querySelector('.reset-link');
+        // Fonction debounce pour éviter trop de requêtes
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const formData = new URLSearchParams(new FormData(form));
-                    const url = `${form.action}?${formData.toString()}`;
-                    loadMatieres(url);
-                    history.pushState({}, '', url);
-                });
+        // Recherche automatique pour les matières premières
+        const debouncedSearchMatieres = debounce(function() {
+            const search = document.getElementById('searchMatieres').value;
+            const url = new URL(window.location.href);
+            if (search) {
+                url.searchParams.set('search', search);
+            } else {
+                url.searchParams.delete('search');
             }
+            history.pushState({}, '', url.toString());
+            loadMatieres(url.toString());
+        }, 500);
 
-            if (resetLink) {
-                resetLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    form.reset();
-                    const url = form.action;
-                    loadMatieres(url);
-                    history.pushState({}, '', url);
-                });
+        function resetSearchMatieres() {
+            document.getElementById('searchMatieres').value = '';
+            const url = new URL(window.location.href);
+            url.searchParams.delete('search');
+            history.pushState({}, '', url.toString());
+            loadMatieres(url.toString());
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchMatieres = document.getElementById('searchMatieres');
+            if (searchMatieres) {
+                const params = new URLSearchParams(window.location.search);
+                searchMatieres.value = params.get('search') || '';
             }
         });
 
         window.addEventListener('popstate', function() {
+            const params = new URLSearchParams(window.location.search);
+            const searchMatieres = document.getElementById('searchMatieres');
+            if (searchMatieres) {
+                searchMatieres.value = params.get('search') || '';
+            }
             loadMatieres(window.location.href);
         });
 

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Site;
 use App\Models\Ferme;
 use App\Models\Magasin;
+use App\Models\StockPoulet;
+use App\Models\MatierePremiere;
 
 class EntiteController extends Controller
 {
@@ -348,7 +350,7 @@ class EntiteController extends Controller
     public function destroyFerme($id)
     {
         $ferme = Ferme::find($id);
-        
+
         if (!$ferme) {
             return response()->json(['error' => 'Ferme non trouvée'], 404);
         }
@@ -356,6 +358,62 @@ class EntiteController extends Controller
         $ferme->delete();
 
         return response()->json(['message' => 'Ferme supprimée avec succès']);
+    }
+
+    public function getFermePoulets($id)
+    {
+        $ferme = Ferme::find($id);
+
+        if (!$ferme) {
+            return response()->json(['error' => 'Ferme non trouvée'], 404);
+        }
+
+        // Poulets actuellement dans la ferme (statut en_stock ou en_production)
+        $currentStocks = StockPoulet::with('poulet')
+            ->where('ferme_id', $id)
+            ->whereIn('statut', ['en_stock', 'en_production'])
+            ->get()
+            ->map(function ($stock) {
+                return [
+                    'id' => $stock->id,
+                    'code_stock' => $stock->code_stock,
+                    'poulet' => $stock->poulet ? [
+                        'id' => $stock->poulet->id,
+                        'nom' => $stock->poulet->nom,
+                        'race' => $stock->poulet->race,
+                    ] : null,
+                    'quantite' => $stock->quantite,
+                    'statut' => $stock->statut,
+                    'date_entree' => $stock->date_entree ? $stock->date_entree->format('d/m/Y') : null,
+                ];
+            });
+
+        // Historique des poulets (statut vendu ou mort avec date_sortie)
+        $historiqueStocks = StockPoulet::with('poulet')
+            ->where('ferme_id', $id)
+            ->whereIn('statut', ['vendu', 'mort'])
+            ->whereNotNull('date_sortie')
+            ->orderBy('date_sortie', 'desc')
+            ->get()
+            ->map(function ($stock) {
+                return [
+                    'id' => $stock->id,
+                    'code_stock' => $stock->code_stock,
+                    'poulet' => $stock->poulet ? [
+                        'id' => $stock->poulet->id,
+                        'nom' => $stock->poulet->nom,
+                        'race' => $stock->poulet->race,
+                    ] : null,
+                    'quantite' => $stock->quantite,
+                    'statut' => $stock->statut,
+                    'date_sortie' => $stock->date_sortie ? $stock->date_sortie->format('d/m/Y') : null,
+                ];
+            });
+
+        return response()->json([
+            'current' => $currentStocks,
+            'historique' => $historiqueStocks,
+        ]);
     }
 
     // Magasins
@@ -442,5 +500,37 @@ class EntiteController extends Controller
     {
         $magasins = Magasin::select('id', 'nom')->get();
         return response()->json($magasins);
+    }
+
+    public function getMagasinStocks($id)
+    {
+        $magasin = Magasin::find($id);
+
+        if (!$magasin) {
+            return response()->json(['error' => 'Magasin non trouvé'], 404);
+        }
+
+        // Récupérer les matières premières du magasin via la table pivot lot_matiere_premiere
+        $stocks = MatierePremiere::whereHas('lots', function ($query) use ($id) {
+            $query->where('lot_matiere_premiere.magasin_id', $id);
+        })
+        ->with(['lots' => function ($query) use ($id) {
+            $query->where('lot_matiere_premiere.magasin_id', $id);
+        }])
+        ->get()
+        ->map(function ($matiere) use ($id) {
+            $pivot = $matiere->lots->first()?->pivot;
+            return [
+                'id' => $matiere->id,
+                'code' => $matiere->code,
+                'nom' => $matiere->nom,
+                'unite' => $matiere->unite,
+                'seuil_alerte' => $matiere->seuil_alerte,
+                'quantite' => $pivot ? $pivot->quantite : 0,
+                'quantite_utiliser' => $pivot ? $pivot->quantite_utiliser : 0,
+            ];
+        });
+
+        return response()->json($stocks);
     }
 }

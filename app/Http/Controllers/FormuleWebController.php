@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Formule;
 use App\Models\MatierePremiere;
+use App\Models\StockAliment;
+use App\Models\Aliment;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class FormuleWebController extends Controller
@@ -59,6 +61,30 @@ class FormuleWebController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        // Récupérer les statistiques d'utilisation des formules dans les stocks
+        $formuleUsageStats = [];
+        $allFormules = Formule::all();
+        foreach ($allFormules as $formule) {
+            $stockCount = StockAliment::where('formule_id', $formule->id)->count();
+            $formuleUsageStats[$formule->id] = [
+                'count' => $stockCount,
+                'stocks' => StockAliment::with(['aliment'])
+                    ->where('formule_id', $formule->id)
+                    ->get()
+                    ->map(function ($stock) {
+                        return [
+                            'id' => $stock->id,
+                            'code_stock' => $stock->code_stock,
+                            'aliment_nom' => $stock->aliment ? $stock->aliment->nom : 'Inconnu',
+                            'aliment_code' => $stock->aliment ? $stock->aliment->code : '',
+                            'quantite_fabriquer' => $stock->quantite_fabriquer,
+                            'quantite_utiliser' => $stock->quantite_utiliser,
+                            'status' => $stock->status,
+                        ];
+                    })
+            ];
+        }
+
         $stats = [
             'total' => $totalFormules,
             'totalComposants' => $totalComposants,
@@ -73,7 +99,7 @@ class FormuleWebController extends Controller
             ]);
         }
 
-        return view('pages.admin.gestion-formules', compact('formules', 'matieresPremieres', 'stats'));
+        return view('pages.admin.gestion-formules', compact('formules', 'matieresPremieres', 'stats', 'formuleUsageStats'));
     }
 
     public function store(Request $request)
