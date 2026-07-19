@@ -24,7 +24,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="mb-6">
                 <h2 class="text-2xl font-bold text-[#305327] mb-2">Historique des Mouvements</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg">
                     <div>
                         <p class="text-sm text-gray-600">Code Stock</p>
                         <p class="font-semibold text-[#305327]">{{ $stock->code_stock }}</p>
@@ -38,16 +38,26 @@
                         <p class="font-semibold text-[#305327]">{{ $stock->ferme ? $stock->ferme->nom : 'Non assigné' }}</p>
                     </div>
                     <div>
+                        <p class="text-sm text-gray-600">Fournisseur</p>
+                        <p class="font-semibold text-[#305327]">{{ $stock->fournisseur ?? 'Non renseigné' }}</p>
+                    </div>
+                    <div>
                         <p class="text-sm text-gray-600">Quantité Actuelle</p>
                         <p class="font-semibold text-[#305327]">{{ $stock->quantite }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Statut</p>
                         <p class="font-semibold">
-                            <span class="px-2 py-1 rounded-full text-xs font-semibold 
-                                {{ $stock->statut === 'en_stock' ? 'bg-green-100 text-green-700' : 
-                                ($stock->statut === 'vendu' ? 'bg-blue-100 text-blue-700' : 
-                                ($stock->statut === 'mort' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')) }}">
+                            @php
+                                $statutClass = match($stock->statut) {
+                                    'vendu' => 'bg-blue-100 text-blue-700',
+                                    'Réforme' => 'bg-red-100 text-red-700',
+                                    'Démarrage', 'Croissance', 'Finition' => 'bg-green-100 text-green-700',
+                                    'Pré-Ponte', 'Pic de Ponte', 'Ponte Régulière' => 'bg-yellow-100 text-yellow-700',
+                                    default => 'bg-gray-100 text-gray-700',
+                                };
+                            @endphp
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $statutClass }}">
                                 {{ $stock->statut }}
                             </span>
                         </p>
@@ -55,6 +65,10 @@
                     <div>
                         <p class="text-sm text-gray-600">Date d'entrée</p>
                         <p class="font-semibold text-[#305327]">{{ $stock->date_entree ? $stock->date_entree->format('d/m/Y') : '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Âge actuel</p>
+                        <p class="font-semibold text-[#305327]">{{ $stock->age_actuel !== null ? $stock->age_actuel . ' jours' : '-' }}</p>
                     </div>
                 </div>
             </div>

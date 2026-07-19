@@ -12,13 +12,9 @@ class Poulet extends Model
         'code',
         'nom',
         'race',
+        'type',
         'photo',
     ];
-
-    public function arrivages()
-    {
-        return $this->hasMany(ArrivagePoulet::class);
-    }
 
     public static function generateCode()
     {

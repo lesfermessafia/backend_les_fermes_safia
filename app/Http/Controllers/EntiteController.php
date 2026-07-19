@@ -368,10 +368,10 @@ class EntiteController extends Controller
             return response()->json(['error' => 'Ferme non trouvée'], 404);
         }
 
-        // Poulets actuellement dans la ferme (statut en_stock ou en_production)
+        // Poulets actuellement dans la ferme (hors statuts finaux)
         $currentStocks = StockPoulet::with('poulet')
             ->where('ferme_id', $id)
-            ->whereIn('statut', ['en_stock', 'en_production'])
+            ->whereNotIn('statut', \App\Models\StockPoulet::statutsFinaux())
             ->get()
             ->map(function ($stock) {
                 return [
@@ -388,10 +388,10 @@ class EntiteController extends Controller
                 ];
             });
 
-        // Historique des poulets (statut vendu ou mort avec date_sortie)
+        // Historique des poulets (statuts finaux avec date_sortie)
         $historiqueStocks = StockPoulet::with('poulet')
             ->where('ferme_id', $id)
-            ->whereIn('statut', ['vendu', 'mort'])
+            ->whereIn('statut', \App\Models\StockPoulet::statutsFinaux())
             ->whereNotNull('date_sortie')
             ->orderBy('date_sortie', 'desc')
             ->get()

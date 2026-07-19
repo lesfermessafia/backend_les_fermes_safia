@@ -62,5 +62,29 @@
             <p>Superviseur: superviseur@example.com / superviseur</p>
         </div>
     </div>
+
+    <!-- Bouton retour en haut -->
+    <button id="backToTop" type="button" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-50 bg-[#008d36] text-white p-3 rounded-full shadow-lg hover:bg-[#305327] transition duration-300 opacity-0 pointer-events-none" aria-label="Retour en haut">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+    <script>
+        (function () {
+            const backToTop = document.getElementById('backToTop');
+            if (!backToTop) return;
+            function toggle() {
+                if (window.scrollY > 200) {
+                    backToTop.classList.remove('opacity-0', 'pointer-events-none');
+                    backToTop.classList.add('opacity-100', 'pointer-events-auto');
+                } else {
+                    backToTop.classList.remove('opacity-100', 'pointer-events-auto');
+                    backToTop.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }
+            window.addEventListener('scroll', toggle);
+            toggle();
+        })();
+    </script>
 </body>
 </html>

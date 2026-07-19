@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use App\Models\Aliment;
 use App\Models\StockAliment;
 use App\Models\Formule;
@@ -40,6 +41,25 @@ class AlimentWebController extends Controller
         }
 
         return view('pages.admin.gestion-aliments', compact('aliments', 'totalAliments', 'stockAliments', 'stocksTermines', 'formules'));
+    }
+
+    public function comptableIndex(Request $request)
+    {
+        $stockAliments = StockAliment::with(['aliment', 'formule'])
+            ->whereIn('status', ['en attente', 'en production', 'production terminer'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $formules = Formule::all();
+        $aliments = Aliment::orderBy('nom')->get();
+
+        $historiques = \App\Models\HistoriqueAliment::with(['stockAliment.aliment', 'gerant'])
+            ->orderBy('date_mouvement', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('pages.comptable.gestion-aliments', compact('stockAliments', 'formules', 'aliments', 'historiques'));
     }
 
     public function store(Request $request)
@@ -205,6 +225,10 @@ class AlimentWebController extends Controller
             return redirect()->back()->with('error', 'Stock non trouvé');
         }
 
+        if ($stock->status !== 'production terminer') {
+            return redirect()->back()->with('error', 'Les mouvements ne sont possibles que pour les stocks au statut "production terminer".');
+        }
+
         // Vérifier la disponibilité pour les sorties
         if ($request->type === 'sortie') {
             $disponible = $stock->quantite_fabriquer - $stock->quantite_utiliser;
@@ -232,6 +256,32 @@ class AlimentWebController extends Controller
         $stock->save();
 
         return redirect()->back()->with('success', 'Mouvement enregistré avec succès');
+    }
+
+    public function changeStockStatus(Request $request, $id)
+    {
+        $stock = StockAliment::find($id);
+
+        if (!$stock) {
+            return redirect()->back()->with('error', 'Stock non trouvé');
+        }
+
+        $disponible = $stock->quantite_fabriquer - $stock->quantite_utiliser;
+
+        $allowed = match ($stock->status) {
+            'en attente' => ['en production', 'annule'],
+            'en production' => ['production terminer'],
+            'production terminer' => $disponible <= 0 ? ['consommer'] : [],
+            default => [],
+        };
+
+        $request->validate([
+            'status' => ['required', Rule::in($allowed)],
+        ]);
+
+        $stock->update(['status' => $request->status]);
+
+        return redirect()->back()->with('success', 'Statut mis à jour avec succès');
     }
 
     public function stockDetails($id)

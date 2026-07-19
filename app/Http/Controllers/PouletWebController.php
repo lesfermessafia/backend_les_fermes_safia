@@ -44,6 +44,18 @@ class PouletWebController extends Controller
             });
         }
 
+        if ($fermeId = $request->input('ferme_id')) {
+            $stocksQuery->where('ferme_id', $fermeId);
+        }
+
+        if ($pouletId = $request->input('poulet_id')) {
+            $stocksQuery->where('poulet_id', $pouletId);
+        }
+
+        if ($statut = $request->input('statut')) {
+            $stocksQuery->where('statut', $statut);
+        }
+
         $totalStocks = $stocksQuery->count();
         $stocks = $stocksQuery->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
@@ -64,10 +76,10 @@ class PouletWebController extends Controller
             ->toArray();
 
         $totalQuantiteStocks = StockPoulet::sum('quantite');
-        $totalMorts = StockPoulet::where('statut', 'mort')->sum('quantite');
         $totalVendus = StockPoulet::where('statut', 'vendu')->sum('quantite');
-        $totalEnStock = StockPoulet::where('statut', 'en_stock')->sum('quantite');
-        $totalEnProduction = StockPoulet::where('statut', 'en_production')->sum('quantite');
+        $totalReforme = StockPoulet::where('statut', 'Réforme')->sum('quantite');
+        $totalNonVendu = StockPoulet::where('statut', 'non vendu')->sum('quantite');
+        $totalEnStock = StockPoulet::whereNotIn('statut', StockPoulet::statutsFinaux())->sum('quantite');
 
         $fermes = Ferme::all();
         $pouletsStocks = Poulet::all();
@@ -90,10 +102,10 @@ class PouletWebController extends Controller
             'totalQuantiteStocks',
             'statsByPouletStocks',
             'statsByStatutStocks',
-            'totalMorts',
+            'totalReforme',
+            'totalNonVendu',
             'totalVendus',
             'totalEnStock',
-            'totalEnProduction',
             'fermes',
             'pouletsStocks'
         ));
@@ -104,6 +116,7 @@ class PouletWebController extends Controller
         $request->validate([
             'nom' => 'required|string',
             'race' => 'required|string',
+            'type' => 'required|in:chair,pondeuse',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -117,6 +130,7 @@ class PouletWebController extends Controller
         Poulet::create([
             'nom' => $request->nom,
             'race' => $request->race,
+            'type' => $request->type,
             'code' => Poulet::generateCode(),
             'photo' => $photoPath,
         ]);
@@ -135,12 +149,14 @@ class PouletWebController extends Controller
         $request->validate([
             'nom' => 'required|string',
             'race' => 'required|string',
+            'type' => 'required|in:chair,pondeuse',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $updateData = [
             'nom' => $request->nom,
             'race' => $request->race,
+            'type' => $request->type,
         ];
 
         if ($request->hasFile('photo')) {

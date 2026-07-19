@@ -8,6 +8,7 @@ use App\Models\HistoriqueStockPoulet;
 use App\Models\Ferme;
 use App\Models\Poulet;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\Rule;
 
 class StockPouletWebController extends Controller
 {
@@ -35,6 +36,12 @@ class StockPouletWebController extends Controller
 
         if ($pouletId = $request->input('poulet_id')) {
             $query->where('poulet_id', $pouletId);
+        }
+
+        if ($race = $request->input('race')) {
+            $query->whereHas('poulet', function ($q) use ($race) {
+                $q->where('race', $race);
+            });
         }
 
         $totalStocks = $query->count();
@@ -68,13 +75,14 @@ class StockPouletWebController extends Controller
             ->toArray();
 
         $totalQuantite = StockPoulet::sum('quantite');
-        $totalMorts = StockPoulet::where('statut', 'mort')->sum('quantite');
         $totalVendus = StockPoulet::where('statut', 'vendu')->sum('quantite');
-        $totalEnStock = StockPoulet::where('statut', 'en_stock')->sum('quantite');
-        $totalEnProduction = StockPoulet::where('statut', 'en_production')->sum('quantite');
+        $totalReforme = StockPoulet::where('statut', 'Réforme')->sum('quantite');
+        $totalNonVendu = StockPoulet::where('statut', 'non vendu')->sum('quantite');
+        $totalEnStock = StockPoulet::whereNotIn('statut', StockPoulet::statutsFinaux())->sum('quantite');
 
         $fermes = Ferme::all();
         $poulets = Poulet::all();
+        $races = $poulets->pluck('race')->unique()->filter()->values();
 
         if ($request->ajax()) {
             return response()->json([
@@ -86,10 +94,10 @@ class StockPouletWebController extends Controller
                     'byPoulet' => $statsByPoulet,
                     'byStatut' => $statsByStatut,
                     'byFerme' => $statsByFerme,
-                    'morts' => $totalMorts,
+                    'reforme' => $totalReforme,
+                    'nonVendu' => $totalNonVendu,
                     'vendus' => $totalVendus,
                     'enStock' => $totalEnStock,
-                    'enProduction' => $totalEnProduction,
                 ],
             ]);
         }
@@ -101,12 +109,13 @@ class StockPouletWebController extends Controller
             'statsByPoulet',
             'statsByStatut',
             'statsByFerme',
-            'totalMorts',
+            'totalReforme',
+            'totalNonVendu',
             'totalVendus',
             'totalEnStock',
-            'totalEnProduction',
             'fermes',
-            'poulets'
+            'poulets',
+            'races'
         ));
     }
 
@@ -117,11 +126,14 @@ class StockPouletWebController extends Controller
             'poulet_id' => 'required|exists:poulets,id',
             'quantite' => 'required|integer|min:0',
             'date_entree' => 'nullable|date',
-            'statut' => 'required|in:en_stock,vendu,mort,en_production',
             'poids_moyen' => 'nullable|numeric|min:0',
             'age_jours' => 'nullable|integer|min:0',
+            'fournisseur' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        $poulet = Poulet::find($request->poulet_id);
+        $request->validate(['statut' => ['required', 'string', Rule::in(StockPoulet::statutsForPoulet($poulet))]]);
 
         $stock = StockPoulet::create([
             'ferme_id' => $request->ferme_id,
@@ -132,6 +144,7 @@ class StockPouletWebController extends Controller
             'poids_moyen' => $request->poids_moyen,
             'age_jours' => $request->age_jours,
             'code_stock' => StockPoulet::generateCodeStock(),
+            'fournisseur' => $request->fournisseur,
             'notes' => $request->notes,
         ]);
 
@@ -164,11 +177,14 @@ class StockPouletWebController extends Controller
             'quantite' => 'required|integer|min:0',
             'date_entree' => 'nullable|date',
             'date_sortie' => 'nullable|date',
-            'statut' => 'required|in:en_stock,vendu,mort,en_production',
             'poids_moyen' => 'nullable|numeric|min:0',
             'age_jours' => 'nullable|integer|min:0',
+            'fournisseur' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        $poulet = Poulet::find($request->poulet_id);
+        $request->validate(['statut' => ['required', 'string', Rule::in(StockPoulet::statutsForPoulet($poulet))]]);
 
         $oldQuantite = $stock->quantite;
         $newQuantite = $request->quantite;
@@ -182,6 +198,7 @@ class StockPouletWebController extends Controller
             'statut' => $request->statut,
             'poids_moyen' => $request->poids_moyen,
             'age_jours' => $request->age_jours,
+            'fournisseur' => $request->fournisseur,
             'notes' => $request->notes,
         ]);
 
@@ -211,7 +228,7 @@ class StockPouletWebController extends Controller
 
         $stock->delete();
 
-        return redirect()->route('admin.stocks-poulets.index')->with('success', 'Stock supprimé avec succès');
+        return redirect()->back()->with('success', 'Stock supprimé avec succès');
     }
 
     public function destroyMultiple(Request $request)
@@ -268,10 +285,10 @@ class StockPouletWebController extends Controller
 
         // Mettre à jour le statut si nécessaire
         if ($request->motif === 'Vente') {
-            $stock->statut = 'vendu';
+            $stock->statut = ($stock->poulet && $stock->poulet->type === 'pondeuse') ? 'Réforme' : 'vendu';
             $stock->date_sortie = $request->date_mouvement;
         } elseif ($request->motif === 'Mortalité') {
-            $stock->statut = 'mort';
+            $stock->statut = 'non vendu';
             $stock->date_sortie = $request->date_mouvement;
         }
 
@@ -289,5 +306,30 @@ class StockPouletWebController extends Controller
         }
 
         return view('pages.admin.historique-stock-poulet', compact('stock'));
+    }
+
+    public function changeStatus(Request $request, $id)
+    {
+        $stock = StockPoulet::with('poulet')->find($id);
+
+        if (!$stock) {
+            return redirect()->back()->with('error', 'Stock non trouvé');
+        }
+
+        $request->validate([
+            'statut' => ['required', 'string', Rule::in(StockPoulet::statutsForPoulet($stock->poulet))],
+        ]);
+
+        $stock->statut = $request->statut;
+
+        if (in_array($stock->statut, StockPoulet::statutsFinaux())) {
+            $stock->date_sortie = $stock->date_sortie ?? now();
+        } else {
+            $stock->date_sortie = null;
+        }
+
+        $stock->save();
+
+        return redirect()->back()->with('success', 'Statut mis à jour avec succès');
     }
 }

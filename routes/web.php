@@ -11,6 +11,11 @@ use App\Http\Controllers\PouletWebController;
 use App\Http\Controllers\FormuleWebController;
 use App\Http\Controllers\StockPouletWebController;
 use App\Http\Controllers\StockOeufWebController;
+use App\Http\Controllers\ComptableOeufController;
+use App\Http\Controllers\ComptableMatierePremiereController;
+use App\Http\Controllers\ComptablePouletController;
+use App\Http\Controllers\ComptableFermeMagasinController;
+use App\Http\Controllers\ComptableDashboardController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Storage;
 
@@ -133,6 +138,42 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/stock/{id}/details', [AlimentWebController::class, 'stockDetails'])->name('stock.details');
     });
 
+    // Routes de gestion des aliments (Comptable)
+    Route::middleware('role:comptable')->prefix('comptable/aliments')->name('comptable.aliments.')->group(function () {
+        Route::get('/', [AlimentWebController::class, 'comptableIndex'])->name('index');
+        Route::post('/mouvement', [AlimentWebController::class, 'mouvementStock'])->name('mouvement');
+        Route::put('/stock/{id}/status', [AlimentWebController::class, 'changeStockStatus'])->name('stock.status');
+        Route::get('/stock/{id}/details', [AlimentWebController::class, 'stockDetails'])->name('stock.details');
+    });
+
+    // Routes de gestion des oeufs (Comptable)
+    Route::middleware('role:comptable')->prefix('comptable/oeufs')->name('comptable.oeufs.')->group(function () {
+        Route::get('/', [ComptableOeufController::class, 'index'])->name('index');
+        Route::post('/', [ComptableOeufController::class, 'store'])->name('store');
+        Route::post('/mouvement', [ComptableOeufController::class, 'mouvement'])->name('mouvement');
+        Route::get('/stock/{id}/details', [ComptableOeufController::class, 'details'])->name('stock.details');
+    });
+
+    // Routes de gestion des matières premières (Comptable)
+    Route::middleware('role:comptable')->prefix('comptable/matieres-premieres')->name('comptable.matieres-premieres.')->group(function () {
+        Route::get('/', [ComptableMatierePremiereController::class, 'index'])->name('index');
+        Route::post('/lot', [ComptableMatierePremiereController::class, 'storeLot'])->name('lot.store');
+        Route::post('/mouvement', [ComptableMatierePremiereController::class, 'mouvement'])->name('mouvement');
+    });
+
+    // Routes de gestion des poulets (Comptable)
+    Route::middleware('role:comptable')->prefix('comptable/poulets')->name('comptable.poulets.')->group(function () {
+        Route::get('/', [ComptablePouletController::class, 'index'])->name('index');
+        Route::post('/', [ComptablePouletController::class, 'store'])->name('store');
+        Route::post('/mouvement', [ComptablePouletController::class, 'mouvement'])->name('mouvement');
+        Route::put('/{id}/status', [ComptablePouletController::class, 'changeStatus'])->name('status');
+    });
+
+    // Routes de visualisation ferme/magasin (Comptable)
+    Route::middleware('role:comptable')->prefix('comptable/fermes-magasins')->name('comptable.fermes-magasins.')->group(function () {
+        Route::get('/', [ComptableFermeMagasinController::class, 'index'])->name('index');
+    });
+
     // Routes de gestion des poulets (Admin uniquement)
     Route::middleware('role:admin')->prefix('admin/poulets')->name('admin.poulets.')->group(function () {
         Route::get('/', [PouletWebController::class, 'index'])->name('index');
@@ -142,11 +183,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/destroy-multiple', [PouletWebController::class, 'destroyMultiple'])->name('destroyMultiple');
 
         // Routes de gestion des stocks de poulets
+        Route::get('/stocks', [StockPouletWebController::class, 'index'])->name('stocks.index');
         Route::post('/stocks', [StockPouletWebController::class, 'store'])->name('stocks.store');
         Route::put('/stocks/{id}', [StockPouletWebController::class, 'update'])->name('stocks.update');
         Route::delete('/stocks/{id}', [StockPouletWebController::class, 'destroy'])->name('stocks.destroy');
         Route::post('/stocks/destroy-multiple', [StockPouletWebController::class, 'destroyMultiple'])->name('stocks.destroyMultiple');
         Route::post('/stocks/mouvement', [StockPouletWebController::class, 'mouvement'])->name('stocks.mouvement');
+        Route::put('/stocks/{id}/change-status', [StockPouletWebController::class, 'changeStatus'])->name('stocks.changeStatus');
         Route::get('/stocks/{id}/historique', [StockPouletWebController::class, 'historique'])->name('stocks.historique');
     });
 
@@ -173,6 +216,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/comptable/dashboard', function () {
         return view('dashboard.comptable');
     })->name('comptable.dashboard')->middleware('role:comptable');
+
+    Route::get('/comptable/tableau-de-bord', [ComptableDashboardController::class, 'index'])
+        ->name('comptable.tableau-de-bord')
+        ->middleware('role:comptable');
 
     // Dashboard Superviseur
     Route::get('/superviseur/dashboard', function () {

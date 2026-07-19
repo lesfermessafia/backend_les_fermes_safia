@@ -9,8 +9,6 @@ use App\Models\User;
 use App\Models\Poulet;
 use App\Models\StockPoulet;
 use App\Models\HistoriqueStockPoulet;
-use App\Models\ArrivagePoulet;
-use App\Models\MouvementPoulet;
 use App\Models\MatierePremiere;
 use App\Models\MouvementStock;
 use App\Models\Lot;
@@ -81,7 +79,7 @@ class DashboardController extends Controller
             ->groupBy('statut')
             ->pluck('total', 'statut');
 
-        $totalPouletsEnStock = (int) StockPoulet::where('statut', 'en_stock')->sum('quantite');
+        $totalPouletsEnStock = (int) StockPoulet::whereNotIn('statut', StockPoulet::statutsFinaux())->sum('quantite');
 
         // Mouvements de stock poulets dans la période
         $mouvementsPoulets = HistoriqueStockPoulet::whereBetween('date_mouvement', [$start, $end])
@@ -107,15 +105,6 @@ class DashboardController extends Controller
             $evolutionPoulets[$date][$row->type_mouvement] = (float) $row->total;
         }
         ksort($evolutionPoulets);
-
-        // Arrivages de poulets dans la période
-        $arrivagesPoulets = (int) ArrivagePoulet::whereBetween('created_at', [$start, $end])->sum('quantite');
-
-        // Mouvements poulets (mortalité, vente, malade, aprovisionnement) dans la période
-        $mouvementsPouletsType = MouvementPoulet::whereBetween('date_mouvement', [$start, $end])
-            ->select('type', DB::raw('sum(quantite) as total'))
-            ->groupBy('type')
-            ->pluck('total', 'type');
 
         // Matières premières - mouvements de stock dans la période
         $mouvementsMatieres = MouvementStock::whereBetween('date_mouvement', [$start, $end])
@@ -162,8 +151,6 @@ class DashboardController extends Controller
                 'totalEnStock' => $totalPouletsEnStock,
                 'mouvements' => $mouvementsPoulets,
                 'evolution' => $evolutionPoulets,
-                'arrivages' => $arrivagesPoulets,
-                'mouvementsType' => $mouvementsPouletsType,
             ],
             'matieresPremieres' => [
                 'stockTotal' => $stockMatieresTotal,

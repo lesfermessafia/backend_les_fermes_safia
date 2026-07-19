@@ -16,6 +16,7 @@ class StockPoulet extends Model
         'poids_moyen',
         'age_jours',
         'code_stock',
+        'fournisseur',
         'notes',
     ];
 
@@ -40,6 +41,17 @@ class StockPoulet extends Model
         return $this->hasMany(HistoriqueStockPoulet::class);
     }
 
+    public function getAgeActuelAttribute()
+    {
+        if (!$this->date_entree) {
+            return $this->age_jours;
+        }
+
+        $joursEcoules = $this->date_entree->diffInDays(now());
+
+        return ($this->age_jours ?? 0) + $joursEcoules;
+    }
+
     public static function generateCodeStock()
     {
         do {
@@ -47,5 +59,19 @@ class StockPoulet extends Model
         } while (self::where('code_stock', $code)->exists());
 
         return $code;
+    }
+
+    public static function statutsForPoulet($poulet)
+    {
+        if ($poulet && $poulet->type === 'pondeuse') {
+            return ['Démarrage', 'Pré-Ponte', 'Ponte Régulière', 'Réforme', 'non vendu'];
+        }
+
+        return ['demarrage', 'croissant', 'finition', 'vendu', 'non vendu'];
+    }
+
+    public static function statutsFinaux()
+    {
+        return ['vendu', 'Réforme', 'non vendu'];
     }
 }

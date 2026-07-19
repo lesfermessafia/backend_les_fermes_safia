@@ -95,14 +95,10 @@
         </div>
 
         <!-- Stats de la période -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <div class="bg-white rounded-lg shadow-md p-4">
                 <p class="text-xs text-gray-500 font-medium">Poulets en stock (actuel)</p>
                 <p class="text-2xl font-bold text-[#008d36]" id="stat-poulets-en-stock">{{ $stats['stockPoulets']['totalEnStock'] }}</p>
-            </div>
-            <div class="bg-white rounded-lg shadow-md p-4">
-                <p class="text-xs text-gray-500 font-medium">Arrivages poulets (période)</p>
-                <p class="text-2xl font-bold text-[#305327]" id="stat-arrivages-poulets">{{ $stats['stockPoulets']['arrivages'] }}</p>
             </div>
             <div class="bg-white rounded-lg shadow-md p-4">
                 <p class="text-xs text-gray-500 font-medium">Stock matières premières (actuel)</p>
@@ -143,10 +139,6 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h3 class="text-lg font-semibold text-[#305327] mb-4">Utilisateurs par rôle</h3>
                 <canvas id="chartUsersByRole" height="200"></canvas>
-            </div>
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-[#305327] mb-4">Mouvements poulets par type (période)</h3>
-                <canvas id="chartMouvementsPouletsType" height="200"></canvas>
             </div>
         </div>
     </div>
@@ -193,7 +185,7 @@
                 type: 'doughnut',
                 data: {
                     labels: statutLabels,
-                    datasets: [{ data: statutValues, backgroundColor: ['#008d36', '#3b82f6', '#dc2626', '#f59e0b'] }]
+                    datasets: [{ data: statutValues, backgroundColor: ['#008d36', '#22c55e', '#3b82f6', '#dc2626', '#f59e0b', '#a855f7', '#f97316', '#06b6d4'] }]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
             });
@@ -257,17 +249,6 @@
                 options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // Mouvements poulets par type
-            const pTypeLabels = Object.keys(stats.stockPoulets.mouvementsType || {});
-            const pTypeValues = Object.values(stats.stockPoulets.mouvementsType || {});
-            makeChart('chartMouvementsPouletsType', {
-                type: 'bar',
-                data: {
-                    labels: pTypeLabels,
-                    datasets: [{ label: 'Quantité', data: pTypeValues, backgroundColor: '#008d36' }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
         }
 
         function updateCards(stats) {
@@ -282,7 +263,6 @@
             document.getElementById('ov-lots').textContent = stats.overview.lots;
 
             document.getElementById('stat-poulets-en-stock').textContent = stats.stockPoulets.totalEnStock;
-            document.getElementById('stat-arrivages-poulets').textContent = stats.stockPoulets.arrivages;
             document.getElementById('stat-stock-matieres').textContent = Number(stats.matieresPremieres.stockTotal).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('stat-stock-aliments').textContent = Number(stats.aliments.stockTotal).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }

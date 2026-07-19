@@ -79,6 +79,7 @@
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Nom</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Race</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Type</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Actions</th>
                         </tr>
                     </thead>
@@ -98,6 +99,7 @@
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $poulet->code }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $poulet->nom }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $poulet->race }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ ucfirst($poulet->type ?? '-') }}</td>
                             <td class="px-4 py-3 text-sm">
                                 <button onclick="editPoulet({{ $poulet->id }})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
                                 <button onclick="deletePoulet({{ $poulet->id }})" class="text-red-600 hover:text-red-800">Supprimer</button>
@@ -105,7 +107,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                 Aucun poulet ne correspond aux critères sélectionnés.
                             </td>
                         </tr>
@@ -154,7 +156,7 @@
                     </div>
                     <div>
                         <label for="ferme_id" class="block text-sm font-medium text-gray-700 mb-1">Ferme</label>
-                        <select id="ferme_id" name="ferme_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <select id="ferme_id" name="ferme_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="this.form.submit()">
                             <option value="">Toutes les fermes</option>
                             @foreach($fermes as $ferme)
                                 <option value="{{ $ferme->id }}" {{ request('ferme_id') == $ferme->id ? 'selected' : '' }}>{{ $ferme->nom }}</option>
@@ -163,17 +165,22 @@
                     </div>
                     <div>
                         <label for="statut" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                        <select id="statut" name="statut" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <select id="statut" name="statut" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="this.form.submit()">
                             <option value="">Tous les statuts</option>
-                            <option value="en_stock" {{ request('statut') == 'en_stock' ? 'selected' : '' }}>En stock</option>
-                            <option value="vendu" {{ request('statut') == 'vendu' ? 'selected' : '' }}>Vendu</option>
-                            <option value="mort" {{ request('statut') == 'mort' ? 'selected' : '' }}>Mort</option>
-                            <option value="en_production" {{ request('statut') == 'en_production' ? 'selected' : '' }}>En production</option>
+                            <option value="demarrage" {{ request('statut') == 'demarrage' ? 'selected' : '' }}>demarrage</option>
+                            <option value="croissant" {{ request('statut') == 'croissant' ? 'selected' : '' }}>croissant</option>
+                            <option value="finition" {{ request('statut') == 'finition' ? 'selected' : '' }}>finition</option>
+                            <option value="Démarrage" {{ request('statut') == 'Démarrage' ? 'selected' : '' }}>Démarrage</option>
+                            <option value="Pré-Ponte" {{ request('statut') == 'Pré-Ponte' ? 'selected' : '' }}>Pré-Ponte</option>
+                            <option value="Ponte Régulière" {{ request('statut') == 'Ponte Régulière' ? 'selected' : '' }}>Ponte Régulière</option>
+                            <option value="vendu" {{ request('statut') == 'vendu' ? 'selected' : '' }}>vendu</option>
+                            <option value="Réforme" {{ request('statut') == 'Réforme' ? 'selected' : '' }}>Réforme</option>
+                            <option value="non vendu" {{ request('statut') == 'non vendu' ? 'selected' : '' }}>non vendu</option>
                         </select>
                     </div>
                     <div>
                         <label for="poulet_id" class="block text-sm font-medium text-gray-700 mb-1">Poulet</label>
-                        <select id="poulet_id" name="poulet_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <select id="poulet_id" name="poulet_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="this.form.submit()">
                             <option value="">Tous les poulets</option>
                             @foreach($pouletsStocks as $poulet)
                                 <option value="{{ $poulet->id }}" {{ request('poulet_id') == $poulet->id ? 'selected' : '' }}>{{ $poulet->nom }}</option>
@@ -193,6 +200,7 @@
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Code</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Ferme</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Poulet</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Fournisseur</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Quantité</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Statut</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-[#305327]">Poids Moyen</th>
@@ -208,12 +216,20 @@
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->code_stock }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $stock->ferme ? $stock->ferme->nom : 'Non assigné' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->poulet ? $stock->poulet->nom : 'Non assigné' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ $stock->fournisseur ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $stock->quantite }}</td>
                             <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold 
-                                    {{ $stock->statut === 'en_stock' ? 'bg-green-100 text-green-700' : 
-                                    ($stock->statut === 'vendu' ? 'bg-blue-100 text-blue-700' : 
-                                    ($stock->statut === 'mort' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')) }}">
+                                @php
+                                    $statutClass = match($stock->statut) {
+                                        'vendu' => 'bg-blue-100 text-blue-700',
+                                        'Réforme' => 'bg-red-100 text-red-700',
+                                        'non vendu' => 'bg-gray-100 text-gray-700',
+                                        'demarrage', 'croissant', 'finition' => 'bg-green-100 text-green-700',
+                                        'Démarrage', 'Pré-Ponte', 'Ponte Régulière' => 'bg-yellow-100 text-yellow-700',
+                                        default => 'bg-gray-100 text-gray-700',
+                                    };
+                                @endphp
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $statutClass }}">
                                     {{ $stock->statut }}
                                 </span>
                             </td>
@@ -222,6 +238,11 @@
                                 <button onclick="editStock({{ $stock->id }})" class="text-[#008d36] hover:text-[#305327] mr-2" title="Modifier">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="openChangeStatusModal({{ $stock->id }})" class="text-indigo-600 hover:text-indigo-800 mr-2" title="Changer statut">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                     </svg>
                                 </button>
                                 <button onclick="openMouvementModal({{ $stock->id }})" class="text-blue-600 hover:text-blue-800 mr-2" title="Mouvement">
@@ -243,7 +264,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                                 Aucun stock de poulet ne correspond aux critères sélectionnés.
                             </td>
                         </tr>
@@ -256,7 +277,7 @@
             </div>
 
             <!-- Dashboard KPIs Stocks -->
-            <div id="stats-stocks" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="stats-stocks" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="bg-[#305327]/10 rounded-lg p-4 border border-[#305327]/20">
                     <p class="text-sm text-[#305327] font-medium">Total Poulets</p>
                     <p class="text-2xl font-bold text-[#305327]" id="stats-total-stocks">{{ $totalQuantiteStocks }}</p>
@@ -270,8 +291,12 @@
                     <p class="text-2xl font-bold text-blue-700" id="stats-vendus">{{ $totalVendus }}</p>
                 </div>
                 <div class="bg-red-100 rounded-lg p-4 border border-red-200">
-                    <p class="text-sm text-red-700 font-medium">Morts</p>
-                    <p class="text-2xl font-bold text-red-700" id="stats-morts">{{ $totalMorts }}</p>
+                    <p class="text-sm text-red-700 font-medium">Réforme</p>
+                    <p class="text-2xl font-bold text-red-700" id="stats-reforme">{{ $totalReforme }}</p>
+                </div>
+                <div class="bg-gray-100 rounded-lg p-4 border border-gray-200">
+                    <p class="text-sm text-gray-700 font-medium">Non vendu</p>
+                    <p class="text-2xl font-bold text-gray-700" id="stats-non-vendu">{{ $totalNonVendu }}</p>
                 </div>
             </div>
 
@@ -315,6 +340,14 @@
                     <input type="text" id="pouletRace" name="race" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
                 </div>
 
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select id="pouletType" name="type" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <option value="chair">Chair</option>
+                        <option value="pondeuse">Pondeuse</option>
+                    </select>
+                </div>
+
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
                         Annuler
@@ -348,10 +381,10 @@
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Poulet</label>
-                    <select id="stock_poulet_id" name="poulet_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
-                        <option value="">Sélectionner un poulet</option>
+                    <select id="stock_poulet_id" name="poulet_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]" onchange="updateStockStatutOptions('stock_statut', this.options[this.selectedIndex].dataset.type)">
+                        <option value="" data-type="">Sélectionner un poulet</option>
                         @foreach($pouletsStocks as $poulet)
-                            <option value="{{ $poulet->id }}">{{ $poulet->nom }}</option>
+                            <option value="{{ $poulet->id }}" data-type="{{ $poulet->type }}">{{ $poulet->nom }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -369,10 +402,7 @@
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                     <select id="stock_statut" name="statut" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
-                        <option value="en_stock">En stock</option>
-                        <option value="vendu">Vendu</option>
-                        <option value="mort">Mort</option>
-                        <option value="en_production">En production</option>
+                        <option value="">Sélectionner un poulet pour voir les statuts</option>
                     </select>
                 </div>
 
@@ -387,12 +417,46 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
+                    <input type="text" id="stock_fournisseur" name="fournisseur" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                     <textarea id="stock_notes" name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]"></textarea>
                 </div>
 
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="closeStockModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                        Annuler
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Changer Statut -->
+    <div id="changeStatusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Changer le statut du stock</h3>
+            <form id="changeStatusForm" method="POST" action="">
+                @csrf
+                <input type="hidden" name="_method" value="PUT">
+
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-2">Stock : <span id="changeStatusStockCode" class="font-semibold text-gray-900"></span></p>
+                    <p class="text-sm text-gray-600 mb-4">Type de poulet : <span id="changeStatusPouletType" class="font-semibold text-gray-900"></span></p>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau statut</label>
+                    <select id="change_status_statut" name="statut" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]">
+                        <option value="">Choisir un statut</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeChangeStatusModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
                         Annuler
                     </button>
                     <button type="submit" class="px-4 py-2 bg-[#008d36] text-white rounded-md hover:bg-[#305327] transition duration-200">
@@ -474,6 +538,7 @@
             document.getElementById('pouletId').value = '';
             document.getElementById('pouletNom').value = '';
             document.getElementById('pouletRace').value = '';
+            document.getElementById('pouletType').value = 'chair';
             document.getElementById('pouletPhoto').value = '';
             document.getElementById('pouletPhotoPreview').classList.add('hidden');
             document.getElementById('pouletPhotoPreview').src = '';
@@ -495,6 +560,7 @@
                 document.getElementById('pouletId').value = poulet.id;
                 document.getElementById('pouletNom').value = poulet.nom;
                 document.getElementById('pouletRace').value = poulet.race;
+                document.getElementById('pouletType').value = poulet.type;
                 document.getElementById('pouletPhoto').value = '';
 
                 const preview = document.getElementById('pouletPhotoPreview');
@@ -592,7 +658,7 @@
         function renderPoulets(items) {
             const tbody = document.querySelector('.overflow-x-auto tbody');
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun poulet ne correspond aux critères sélectionnés.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Aucun poulet ne correspond aux critères sélectionnés.</td></tr>';
                 return;
             }
             tbody.innerHTML = items.map(p => `
@@ -604,6 +670,7 @@
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(p.code)}</td>
                     <td class="px-4 py-3 text-sm text-gray-900">${escapeHtml(p.nom)}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(p.race)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${p.type ? escapeHtml(p.type.charAt(0).toUpperCase() + p.type.slice(1)) : '-'}</td>
                     <td class="px-4 py-3 text-sm">
                         <button onclick="editPoulet(${p.id})" class="text-[#008d36] hover:text-[#305327] mr-2">Modifier</button>
                         <button onclick="deletePoulet(${p.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
@@ -706,6 +773,33 @@
         });
 
         // Fonctions pour les stocks de poulets
+        const statutsParType = {
+            chair: ['demarrage', 'croissant', 'finition', 'vendu', 'non vendu'],
+            pondeuse: ['Démarrage', 'Pré-Ponte', 'Ponte Régulière', 'Réforme', 'non vendu'],
+        };
+
+        function getStatutsParType(type) {
+            return statutsParType[type] || statutsParType.chair;
+        }
+
+        function updateStockStatutOptions(selectId, type, selectedValue = '') {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const statuts = getStatutsParType(type);
+            select.innerHTML = '';
+            statuts.forEach(statut => {
+                const option = document.createElement('option');
+                option.value = statut;
+                option.textContent = statut;
+                select.appendChild(option);
+            });
+            if (selectedValue) {
+                select.value = selectedValue;
+            } else if (statuts.length > 0) {
+                select.value = statuts[0];
+            }
+        }
+
         function openStockModal() {
             document.getElementById('stockModal').classList.remove('hidden');
             document.getElementById('stockModal').classList.add('flex');
@@ -717,10 +811,13 @@
             document.getElementById('stock_poulet_id').value = '';
             document.getElementById('stock_quantite').value = '';
             document.getElementById('stock_date_entree').value = '';
-            document.getElementById('stock_statut').value = 'en_stock';
             document.getElementById('stock_poids_moyen').value = '';
             document.getElementById('stock_age_jours').value = '';
+            document.getElementById('stock_fournisseur').value = '';
             document.getElementById('stock_notes').value = '';
+            updateStockStatutOptions('stock_statut', '');
+            document.getElementById('stock_statut').innerHTML = '<option value="">Sélectionner un poulet pour voir les statuts</option>';
+            document.getElementById('stock_statut').value = '';
         }
 
         function closeStockModal() {
@@ -741,10 +838,12 @@
                 document.getElementById('stock_poulet_id').value = stock.poulet_id || '';
                 document.getElementById('stock_quantite').value = stock.quantite;
                 document.getElementById('stock_date_entree').value = stock.date_entree || '';
-                document.getElementById('stock_statut').value = stock.statut;
                 document.getElementById('stock_poids_moyen').value = stock.poids_moyen || '';
                 document.getElementById('stock_age_jours').value = stock.age_jours || '';
+                document.getElementById('stock_fournisseur').value = stock.fournisseur || '';
                 document.getElementById('stock_notes').value = stock.notes || '';
+                const type = stock.poulet ? stock.poulet.type : '';
+                updateStockStatutOptions('stock_statut', type, stock.statut);
             }
         }
 
@@ -837,6 +936,23 @@
             window.location.href = '{{ route('admin.poulets.stocks.historique', ':id') }}'.replace(':id', id);
         }
 
+        function openChangeStatusModal(id) {
+            const stock = stocks.find(s => s.id === id);
+            if (!stock) return;
+            const type = stock.poulet ? stock.poulet.type : '';
+            document.getElementById('changeStatusModal').classList.remove('hidden');
+            document.getElementById('changeStatusModal').classList.add('flex');
+            document.getElementById('changeStatusForm').action = '{{ route('admin.poulets.stocks.changeStatus', ':id') }}'.replace(':id', id);
+            document.getElementById('changeStatusStockCode').textContent = stock.code_stock || '';
+            document.getElementById('changeStatusPouletType').textContent = type || 'non défini';
+            updateStockStatutOptions('change_status_statut', type, stock.statut);
+        }
+
+        function closeChangeStatusModal() {
+            document.getElementById('changeStatusModal').classList.add('hidden');
+            document.getElementById('changeStatusModal').classList.remove('flex');
+        }
+
         function updateCharts(byPoulet, byStatut) {
             // Chart par poulet
             const ctxRace = document.getElementById('chartByRace').getContext('2d');
@@ -869,7 +985,7 @@
                     labels: Object.keys(byStatut),
                     datasets: [{
                         data: Object.values(byStatut),
-                        backgroundColor: ['#22c55e', '#3b82f6', '#ef4444', '#eab308'],
+                        backgroundColor: ['#22c55e', '#3b82f6', '#ef4444', '#eab308', '#a855f7', '#f97316', '#06b6d4', '#6366f1'],
                     }]
                 },
                 options: {
