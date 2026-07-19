@@ -8,6 +8,7 @@ use App\Models\MatierePremiere;
 use App\Models\Lot;
 use App\Models\Magasin;
 use App\Models\MouvementStock;
+use App\Services\StockNotificationService;
 
 class ComptableMatierePremiereController extends Controller
 {
@@ -94,6 +95,15 @@ class ComptableMatierePremiereController extends Controller
 
             DB::commit();
 
+            $matiere = MatierePremiere::find($request->matiere_id);
+            StockNotificationService::notifyRoles(
+                'Nouveau lot de matière première',
+                'Le lot de ' . ($matiere->nom ?? 'matière première') . ' (' . $request->quantite . ' ' . ($matiere->unite ?? '') . ') a été créé.',
+                'stock',
+                route('comptable.matieres-premieres.index'),
+                'indigo'
+            );
+
             return redirect()->back()->with('success', 'Stock cree avec succes');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -162,6 +172,32 @@ class ComptableMatierePremiereController extends Controller
             ]);
 
             DB::commit();
+
+            $matiere = MatierePremiere::find($lmp->matiere_premiere_id);
+            StockNotificationService::notifyRoles(
+                'Mouvement matière première enregistré',
+                ucfirst($request->type) . ' de ' . $request->quantite . ' ' . ($matiere->unite ?? '') . ' de ' . ($matiere->nom ?? 'matière première') . '.',
+                'mouvement',
+                route('comptable.matieres-premieres.index'),
+                $request->type === 'sortie' ? 'orange' : 'indigo'
+            );
+
+            $disponibleApresMouvement = $lmp->quantite - $lmp->quantite_utiliser;
+            if ($request->type === 'entree') {
+                $disponibleApresMouvement += $request->quantite;
+            } else {
+                $disponibleApresMouvement -= $request->quantite;
+            }
+
+            if ($disponibleApresMouvement <= ($matiere->seuil_alerte ?? 0)) {
+                StockNotificationService::notifyRoles(
+                    'Alerte matière première',
+                    'La matière « ' . ($matiere->nom ?? 'matière première') . ' » est sous son seuil d’alerte (' . $disponibleApresMouvement . ' disponible).',
+                    'alerte',
+                    route('comptable.matieres-premieres.index'),
+                    'red'
+                );
+            }
 
             return redirect()->back()->with('success', 'Mouvement enregistre avec succes');
         } catch (\Exception $e) {

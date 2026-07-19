@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EntiteController;
 use App\Http\Controllers\MatierePremiereWebController;
 use App\Http\Controllers\StockMatierePremiereWebController;
@@ -16,6 +18,8 @@ use App\Http\Controllers\ComptableMatierePremiereController;
 use App\Http\Controllers\ComptablePouletController;
 use App\Http\Controllers\ComptableFermeMagasinController;
 use App\Http\Controllers\ComptableDashboardController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DiscussionController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,8 +45,23 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'webLogin'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'webLogout'])->name('logout');
 
+// Mot de passe oublié (code par e-mail)
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showEmailForm'])->name('password.forgot');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendCode'])->name('password.send');
+Route::get('/forgot-password/code', [ForgotPasswordController::class, 'showCodeForm'])->name('password.code.form');
+Route::post('/forgot-password/code', [ForgotPasswordController::class, 'verifyCode'])->name('password.code.verify');
+Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset.form');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'reset'])->name('password.reset');
+
 // Routes protégées par authentification
 Route::middleware(['auth'])->group(function () {
+    // Profil
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::put('/update', [ProfileController::class, 'update'])->name('update');
+        Route::post('/password/code', [ProfileController::class, 'sendPasswordCode'])->name('password.code');
+        Route::post('/password/verify', [ProfileController::class, 'verifyPasswordCode'])->name('password.verify');
+    });
+
     // Dashboard Admin
     Route::get('/admin/dashboard', function () {
         return view('dashboard.admin');
@@ -220,6 +239,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/comptable/tableau-de-bord', [ComptableDashboardController::class, 'index'])
         ->name('comptable.tableau-de-bord')
         ->middleware('role:comptable');
+
+    Route::middleware('adminOrComptable')->prefix('discussion')->name('discussion.')->group(function () {
+        Route::get('/', [DiscussionController::class, 'index'])->name('index');
+        Route::get('/messages/latest', [DiscussionController::class, 'latest'])->name('messages.latest');
+        Route::post('/messages', [DiscussionController::class, 'store'])->name('messages.store');
+    });
+
+    Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/unread', [NotificationController::class, 'unread'])->name('unread');
+        Route::post('/read-all', [NotificationController::class, 'readAll'])->name('read-all');
+        Route::get('/{id}/read', [NotificationController::class, 'read'])->name('read');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    });
 
     // Dashboard Superviseur
     Route::get('/superviseur/dashboard', function () {

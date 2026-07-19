@@ -8,6 +8,7 @@ use App\Models\StockPoulet;
 use App\Models\HistoriqueStockPoulet;
 use App\Models\Ferme;
 use App\Models\Poulet;
+use App\Services\StockNotificationService;
 
 class ComptablePouletController extends Controller
 {
@@ -113,6 +114,14 @@ class ComptablePouletController extends Controller
             'notes' => $request->notes,
         ]);
 
+        StockNotificationService::notifyRoles(
+            'Nouveau stock de poulets',
+            'Un stock de ' . $request->quantite . ' poulet(s) a été créé pour la ferme sélectionnée.',
+            'stock',
+            route('comptable.poulets.index'),
+            'orange'
+        );
+
         return redirect()->back()->with('success', 'Stock de poulets cree avec succes');
     }
 
@@ -161,6 +170,14 @@ class ComptablePouletController extends Controller
         }
 
         $stock->save();
+
+        StockNotificationService::notifyRoles(
+            'Mouvement poulets enregistré',
+            ucfirst($request->type_mouvement) . ' de ' . $request->quantite . ' poulet(s). Motif : ' . $request->motif . '.',
+            'mouvement',
+            route('comptable.poulets.index'),
+            $request->type_mouvement === 'sortie' ? 'orange' : 'green'
+        );
 
         return redirect()->back()->with('success', 'Mouvement enregistre avec succes');
     }

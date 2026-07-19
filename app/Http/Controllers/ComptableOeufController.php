@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\StockOeuf;
 use App\Models\HistoriqueOeuf;
 use App\Models\Ferme;
+use App\Services\StockNotificationService;
 
 class ComptableOeufController extends Controller
 {
@@ -52,6 +53,14 @@ class ComptableOeufController extends Controller
             'date_mouvement' => $request->date_entree,
         ]);
 
+        StockNotificationService::notifyRoles(
+            'Nouveau stock d’œufs',
+            'Un stock de ' . $request->quantite . ' tablette(s) a été créé pour la ferme ' . ($stock->code_ferme ?? 'non définie') . '.',
+            'stock',
+            route('comptable.oeufs.index'),
+            'yellow'
+        );
+
         return redirect()->back()->with('success', 'Stock d\'œufs créé avec succès');
     }
 
@@ -89,6 +98,14 @@ class ComptableOeufController extends Controller
         }
 
         $stock->save();
+
+        StockNotificationService::notifyRoles(
+            'Mouvement œufs enregistré',
+            ucfirst($request->type) . ' de ' . $request->quantite . ' tablette(s).',
+            'mouvement',
+            route('comptable.oeufs.index'),
+            $request->type === 'sortie' ? 'orange' : 'yellow'
+        );
 
         return redirect()->back()->with('success', 'Mouvement enregistré avec succès');
     }

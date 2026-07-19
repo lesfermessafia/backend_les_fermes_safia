@@ -12,6 +12,7 @@
 
     <div class="container mx-auto px-4 py-12">
         <div class="mb-12 text-center">
+            <img src="{{ url('img/toolou-safia-logo.png') }}" alt="Les Fermes Safia" class="mx-auto h-24 w-auto mb-4">
             <h1 class="text-4xl font-bold text-[#305327]">Système de Gestion Comptable</h1>
             <p class="text-xl text-gray-600 mt-2">Tableau de bord du comptable - Les Fermes Safia</p>
         </div>

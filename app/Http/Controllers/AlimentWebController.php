@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use App\Models\Aliment;
 use App\Models\StockAliment;
 use App\Models\Formule;
+use App\Services\StockNotificationService;
 
 class AlimentWebController extends Controller
 {
@@ -147,7 +148,7 @@ class AlimentWebController extends Controller
             $codeStock = 'st-' . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
         } while (StockAliment::where('code_stock', $codeStock)->exists());
 
-        StockAliment::create([
+        $stock = StockAliment::create([
             'aliment_id' => $request->aliment_id,
             'code_stock' => $codeStock,
             'formule_id' => $request->formule_id,
@@ -155,6 +156,14 @@ class AlimentWebController extends Controller
             'quantite_utiliser' => 0,
             'status' => 'en attente',
         ]);
+
+        StockNotificationService::notifyRoles(
+            'Nouveau stock aliment',
+            'Le stock ' . $stock->code_stock . ' a été créé.',
+            'stock',
+            route('comptable.aliments.index'),
+            'green'
+        );
 
         return redirect()->back()->with('success', 'Stock d\'aliment créé avec succès');
     }
@@ -255,6 +264,25 @@ class AlimentWebController extends Controller
 
         $stock->save();
 
+        StockNotificationService::notifyRoles(
+            'Mouvement aliment enregistré',
+            ucfirst($request->type) . ' de ' . $request->quantite . ' sur le stock ' . $stock->code_stock . '.',
+            'mouvement',
+            route('comptable.aliments.index'),
+            $request->type === 'sortie' ? 'orange' : 'green'
+        );
+
+        $disponibleApresMouvement = $stock->quantite_fabriquer - $stock->quantite_utiliser;
+        if ($disponibleApresMouvement <= 0 || ($request->type === 'sortie' && $disponibleApresMouvement <= $stock->quantite_fabriquer * 0.2)) {
+            StockNotificationService::notifyRoles(
+                'Alerte stock aliment',
+                'Le stock ' . $stock->code_stock . ' est presque épuisé (' . $disponibleApresMouvement . ' disponible).',
+                'alerte',
+                route('comptable.aliments.index'),
+                'red'
+            );
+        }
+
         return redirect()->back()->with('success', 'Mouvement enregistré avec succès');
     }
 
@@ -279,7 +307,16 @@ class AlimentWebController extends Controller
             'status' => ['required', Rule::in($allowed)],
         ]);
 
+        $ancienStatut = $stock->status;
         $stock->update(['status' => $request->status]);
+
+        StockNotificationService::notifyRoles(
+            'Statut aliment modifié',
+            'Le stock ' . $stock->code_stock . ' est passé de « ' . $ancienStatut . ' » à « ' . $request->status . ' ».',
+            'statut',
+            route('comptable.aliments.index'),
+            'blue'
+        );
 
         return redirect()->back()->with('success', 'Statut mis à jour avec succès');
     }

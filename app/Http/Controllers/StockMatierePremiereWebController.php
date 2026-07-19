@@ -6,6 +6,7 @@ use App\Models\MatierePremiere;
 use App\Models\Lot;
 use App\Models\Magasin;
 use App\Models\MouvementStock;
+use App\Services\StockNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -244,6 +245,14 @@ class StockMatierePremiereWebController extends Controller
 
             DB::commit();
 
+            StockNotificationService::notifyRoles(
+                'Mouvement matière première enregistré',
+                ucfirst($request->type) . ' de ' . $request->quantite . ' unité(s) de matière première.',
+                'mouvement',
+                route('comptable.matieres-premieres.index'),
+                $request->type === 'sortie' ? 'orange' : 'indigo'
+            );
+
             return response()->json(['message' => 'Mouvement enregistré avec succès']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -389,6 +398,14 @@ class StockMatierePremiereWebController extends Controller
             }
 
             DB::commit();
+
+            StockNotificationService::notifyRoles(
+                'Nouveau lot de matière première',
+                'Un nouveau lot de matière première a été créé.',
+                'stock',
+                route('comptable.matieres-premieres.index'),
+                'indigo'
+            );
 
             return response()->json([
                 'message' => 'Lot créé avec succès',

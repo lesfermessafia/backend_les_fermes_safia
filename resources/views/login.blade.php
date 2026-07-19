@@ -33,6 +33,12 @@
             </div>
         @endif
 
+        @if (session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('login.submit') }}">
             @csrf
             <div class="mb-4">
@@ -42,11 +48,15 @@
                     placeholder="admin@example.com">
             </div>
 
-            <div class="mb-6">
+            <div class="mb-2">
                 <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
                 <input type="password" id="password" name="password" required
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008d36]"
                     placeholder="••••••••">
+            </div>
+
+            <div class="mb-6 text-right">
+                <a href="{{ route('password.forgot') }}" class="text-sm text-[#008d36] hover:underline">Mot de passe oublié ?</a>
             </div>
 
             <button type="submit"
